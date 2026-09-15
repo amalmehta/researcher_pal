@@ -1,0 +1,191 @@
+{
+  "queries": [
+    "fitness model competition scale-free networks",
+    "aging vertices preferential attachment"
+  ],
+  "services": {
+    "arxiv": {
+      "ok": 0,
+      "errors": [
+        "'fitness model competition scale-free networks': 429",
+        "'aging vertices preferential attachment': timeout"
+      ]
+    },
+    "semanticscholar": {
+      "ok": 0,
+      "errors": [
+        "'fitness model competition scale-free networks': 429",
+        "'aging vertices preferential attachment': 429"
+      ]
+    },
+    "crossref": {
+      "ok": 2,
+      "errors": []
+    }
+  },
+  "records": [
+    {
+      "title": "A dynamic evolution model of balanced energy consumption scale-free fault-tolerant topology based on fitness function for wireless sensor networks",
+      "authors": [
+        "Chao Wang"
+      ],
+      "year": 2019,
+      "ids": {
+        "doi": "10.1504/ijsn.2019.100086"
+      },
+      "url": "https://doi.org/10.1504/ijsn.2019.100086",
+      "abstract": "",
+      "venue": "International Journal of Security and Networks",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "fitness model competition scale-free networks"
+    },
+    {
+      "title": "Preferential attachment random graphs with vertices losses",
+      "authors": [
+        "Vladimir N. Zadorozhnyi"
+      ],
+      "year": 2017,
+      "ids": {
+        "doi": "10.1109/sibcon.2017.7998456"
+      },
+      "url": "https://doi.org/10.1109/sibcon.2017.7998456",
+      "abstract": "",
+      "venue": "2017 International Siberian Conference on Control and Communications (SIBCON)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "aging vertices preferential attachment"
+    },
+    {
+      "title": "Sparse cliques trump scale-free networks in coordination and competition",
+      "authors": [
+        "David A. Gianetto",
+        "Babak Heydari"
+      ],
+      "year": 2016,
+      "ids": {
+        "doi": "10.1038/srep21870"
+      },
+      "url": "https://doi.org/10.1038/srep21870",
+      "abstract": "AbstractCooperative behavior, a natural, pervasive and yet puzzling phenomenon, can be significantly enhanced by networks. Many studies have shown how global network characteristics affect cooperation; however, it is difficult to understand how this occurs based on global factors alone, low-level network building blocks, ormotifsare necessary. In this work, we systematically alter the structure of scale-free and clique networks and show, through a stochastic evolutionary game theory model, that cooperation on cliques increases linearly withcommunity motifcount. We further show that, for reactive stochastic strategies, network modularity improves cooperation in theanti-coordinationSnowdrift game and the Prisoner\u2019s Dilemma game but not in the Stag Hunt coordination game. We also confirm the negative effect of the scale-free graph on cooperation when effective payoffs are used. On the flip side, clique graphs are highly cooperative across social environments. Adding cycles to the acyclic scale-free graph increases cooperation when multiple games are considered; however, cycles have the opposite effect on how forgiving agents are when playing the Prisoner\u2019s Dilemma game.",
+      "venue": "Scientific Reports",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "fitness model competition scale-free networks"
+    },
+    {
+      "title": "Symmetric Preferential Attachment for New Vertices Attaching to Software Networks",
+      "authors": [
+        "Hui Li",
+        "Li-Ying Hao",
+        "Rong Chen",
+        "Xin Ge",
+        "Hai Zhao"
+      ],
+      "year": 2014,
+      "ids": {
+        "doi": "10.1007/s00354-014-0405-6"
+      },
+      "url": "https://doi.org/10.1007/s00354-014-0405-6",
+      "abstract": "",
+      "venue": "New Generation Computing",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "aging vertices preferential attachment"
+    },
+    {
+      "title": "Vertices of high degree in the preferential attachment tree",
+      "authors": [
+        "Graham Brightwell",
+        "Malwina Luczak"
+      ],
+      "year": 2012,
+      "ids": {
+        "doi": "10.1214/ejp.v17-1803"
+      },
+      "url": "https://doi.org/10.1214/ejp.v17-1803",
+      "abstract": "",
+      "venue": "Electronic Journal of Probability",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "aging vertices preferential attachment"
+    },
+    {
+      "title": "Imperfect Competition on Scale-Free Networks: Modern Monopolistic Competition",
+      "authors": [
+        "Tomohiko Konno"
+      ],
+      "year": 2010,
+      "ids": {
+        "doi": "10.2139/ssrn.1558925"
+      },
+      "url": "https://doi.org/10.2139/ssrn.1558925",
+      "abstract": "In this paper, we study imperfect competition on a scale-free network. A scale-free network is not exceptional but rather ubiquitous in reality. For this purpose, we construct a class of utility functions, from which relationships between firms in the form of networks are derived. A regional relationship is an example of such a network.\r\n\r\nContrary to the intuition on quantity competition, the output and price are always the same as that in the monopoly regardless of the number of rival firms. We show how a scale-free network drastically changes the outcome.\r\n\r\nThis is a modern version of monopolistic competition. While Dixit-Stiglitz model ignores strategic interactions, our model takes it into account and derives monopolistic outcome.",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "fitness model competition scale-free networks"
+    },
+    {
+      "title": "Scale-free networks as entropy competition",
+      "authors": [
+        "Antonio Sanchirico",
+        "Mauro Fiorentino"
+      ],
+      "year": 2008,
+      "ids": {
+        "doi": "10.1103/physreve.78.046114"
+      },
+      "url": "https://doi.org/10.1103/physreve.78.046114",
+      "abstract": "",
+      "venue": "Physical Review E",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "fitness model competition scale-free networks"
+    },
+    {
+      "title": "Intrinsic fitness and preferential attachment in scale-free networks",
+      "authors": [
+        "Hongbo Liu",
+        "Jiaxin Wang"
+      ],
+      "year": 2006,
+      "ids": {
+        "doi": "10.1109/icact.2006.206395"
+      },
+      "url": "https://doi.org/10.1109/icact.2006.206395",
+      "abstract": "",
+      "venue": "2006 8th International Conference Advanced Communication Technology",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "fitness model competition scale-free networks"
+    },
+    {
+      "title": "High Degree Vertices and Eigenvalues in the Preferential Attachment Graph",
+      "authors": [
+        "Abraham Flaxman",
+        "Alan Frieze",
+        "Trevor Fenner"
+      ],
+      "year": 2005,
+      "ids": {
+        "doi": "10.1007/978-3-540-45198-3_23"
+      },
+      "url": "https://doi.org/10.1080/15427951.2005.10129097",
+      "abstract": "",
+      "venue": "Internet Mathematics",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "aging vertices preferential attachment"
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "queries": [
+    "learning rate warmup transformer",
+    "warmup adaptive learning rate variance"
+  ],
+  "services": {
+    "arxiv": {
+      "ok": 0,
+      "errors": [
+        "'learning rate warmup transformer': 429",
+        "'warmup adaptive learning rate variance': timeout"
+      ]
+    },
+    "semanticscholar": {
+      "ok": 0,
+      "errors": [
+        "'learning rate warmup transformer': 429",
+        "'warmup adaptive learning rate variance': 429"
+      ]
+    },
+    "crossref": {
+      "ok": 2,
+      "errors": []
+    }
+  },
+  "records": [
+    {
+      "title": "Learning-Rate Scheduling for Neural Network Training: A Scoping Review of ReduceLROnPlateau, Cosine Annealing with Warm Restarts, Cyclical Learning Rates, and Linear Warmup with Linear Decay",
+      "authors": [
+        "SPGE Illukkumbura"
+      ],
+      "year": 2026,
+      "ids": {
+        "doi": "10.64701/ijrc/345/9125"
+      },
+      "url": "https://doi.org/10.64701/ijrc/345/9125",
+      "abstract": "This scoping review presents a structured synthesis of\nlearning-rate scheduling for neural network training. The\nlearning rate is a consequential hyperparameter in gradientbased neural network training because it mediates the tradeoff between early exploration and late-stage convergence precision. The review focuses on four widely used learning-rate\nscheduling paradigms: (1) ReduceLROnPlateau (RLROP),\na feedback-driven reactive scheduler; (2) Stochastic Gradient Descent with Warm Restarts (SGDR), a periodic cosineshaped schedule; (3) Cyclical Learning Rates (CLR), an oscillatory triangular or exponential schedule; and (4) Linear\nWarmup with Linear Decay (LW+LD), a two-phase schedule widely used with transformer models. We use a common\nnotation as a pedagogical organizing device, distinguish formal results from empirical tendencies and heuristic analogies,\nand summarize how each method relates to classical step-size\nconditions and adaptive-optimizer stability. The quantitative\ntables are explicitly treated as heterogeneous literature summaries rather than controlled head-to-head benchmarks; they\nare retained only to document source-specific evidence and\npractical signals. The article includes a scoping-search log,\na quality-assessment rubric, caveats on benchmark comparability, hyperparameter-sensitivity diagnostics, failure-mode\nchecks, and an AI tool usage and human contribution statement. The resulting scheduler-selection framework is intended as practical guidance, not as a statistically ranked\nperformance claim.",
+      "venue": "International Journal of Research in Computing",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "learning rate warmup transformer"
+    },
+    {
+      "title": "A Comparative Analysis of Learning-Rate Selection for Fine-Tuning Transformer Language Models",
+      "authors": [
+        "Gopakumar T- V"
+      ],
+      "year": 2026,
+      "ids": {
+        "doi": "10.22541/au.177011867.70562622/v1"
+      },
+      "url": "https://doi.org/10.22541/au.177011867.70562622/v1",
+      "abstract": "\n                  Learning rate is a critical hyperparameter in the fine-tuning of large\nlanguage models, strongly influencing convergence, training stability,\nand generalization performance. However, learning-rate selection is\noften based on heuristics, and systematic comparisons across different\nmodel architectures remain limited. This work presents a controlled\nempirical study of learning-rate sensitivity in three transformer-based\nlanguage models of varying scale: GPT-2, OPT-350M, and\nEleutherAI/Pythia-160M. All models were fine-tuned on the same\npublic-domain dataset,\n                  Alice\u2019s Adventures in Wonderland\n                  , under\nidentical experimental conditions. Four learning rates (1e-05, 5e-05,\n1e-04, and 5e-04) were evaluated over three training epochs while\nkeeping all other hyperparameters fixed. Model performance was assessed\nusing epoch-wise validation loss and final perplexity, enabling direct\ncomparison of convergence behavior and training stability. The results\nindicate that moderate learning rates lead to stable convergence and\nimproved generalization, whereas excessively large learning rates cause\noptimization instability, reflected by increasing validation loss and\nsharp rises in perplexity. OPT-350M achieves the lowest perplexity and\nexhibits greater robustness at lower learning rates, while GPT-2 and\nPythia-160M show higher sensitivity to learning-rate selection. Overall,\nthe study highlights the importance of careful learning-rate tuning and\nprovides practical guidance for stable fine-tuning of transformer-based\nlanguage models.\n                ",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "learning rate warmup transformer"
+    },
+    {
+      "title": "SVRG-AALR: Stochastic Variance-Reduced Gradient Method with Adaptive Alternating Learning Rate for Training Deep Neural Networks",
+      "authors": [
+        "Shiyun Zou",
+        "Hua Qin",
+        "Guolin Yang",
+        "Pengfei Wang"
+      ],
+      "year": 2025,
+      "ids": {
+        "doi": "10.3390/electronics14152979"
+      },
+      "url": "https://doi.org/10.3390/electronics14152979",
+      "abstract": "The stochastic variance-reduced gradient (SVRG) theory is particularly well-suited for addressing gradient variance in deep neural network (DNN) training; however, its direct application to DNN training is hindered by adaptation challenges. To tackle this issue, the present paper proposes a series of strategies focused on adaptive alternating learning rates to effectively adapt SVRG for DNN training. Firstly, within the outer loop of SVRG, both the full gradient and the learning rate specific to DNN training are computed. For two distinct formulas used for calculating the learning rate, an alternating strategy is introduced that employs them alternately across iterations. This approach allows for simultaneous provision of diverse guidance information regarding parameter change rates and gradient change rates during DNN weight updates. Additionally, a threshold method is utilized to correct the learning rate into an appropriate range, thereby accelerating convergence. Secondly, in the inner loop of SVRG, DNN weights are updated using mini-batch average gradient along with the proposed learning rate. Concurrently, mini-batch average gradients from each iteration within the inner loop are refined and aggregated into a single gradient exhibiting reduced variance through an inertia strategy. This refined gradient is then relayed back to the outer loop to recalculate the new learning rate. The efficacy of the proposed algorithm has been validated on models including LeNet, VGG11, ResNet34, and DenseNet121 while being compared against several classic and advanced optimizers. Experimental results demonstrate that the proposed algorithm exhibits remarkable training robustness across DNN models with diverse characteristics. In terms of training convergence, the proposed algorithm demonstrates competitiveness with state-of-the-art algorithms, such as Lion, developed by the Google Brain team.",
+      "venue": "Electronics",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "warmup adaptive learning rate variance"
+    },
+    {
+      "title": "Why Warmup the Learning Rate? Underlying Mechanisms and Improvements",
+      "authors": [
+        "Dayal Singh Kalra",
+        "Maissam Barkeshli"
+      ],
+      "year": 2024,
+      "ids": {
+        "doi": "10.52202/079017-3549"
+      },
+      "url": "https://doi.org/10.52202/079017-3549",
+      "abstract": "",
+      "venue": "Advances in Neural Information Processing Systems 37",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "learning rate warmup transformer"
+    },
+    {
+      "title": "Analyzing &amp; Reducing the Need for Learning Rate Warmup in GPT Training",
+      "authors": [
+        "Atli Kosson",
+        "Bettina Messmer",
+        "Martin Jaggi"
+      ],
+      "year": 2024,
+      "ids": {
+        "doi": "10.52202/079017-0096"
+      },
+      "url": "https://doi.org/10.52202/079017-0096",
+      "abstract": "",
+      "venue": "Advances in Neural Information Processing Systems 37",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "learning rate warmup transformer"
+    },
+    {
+      "title": "Learning rate adjustment and optimization of RepVGG network based on warmup strategy",
+      "authors": [
+        "Ying Lin"
+      ],
+      "year": 2023,
+      "ids": {
+        "doi": "10.54254/2755-2721/19/20231002"
+      },
+      "url": "https://doi.org/10.54254/2755-2721/19/20231002",
+      "abstract": "Artificial neural networks have developed rapidly in recent years and play an important role in the academic field. In this paper, the RepVGG artificial neural network model is adjusted by the learning rate algorithm, so as to realize the optimization of the model including but not limited to accuracy. The main optimization strategy is to add the warmup strategy based on the learning rate algorithm of the original model so that the model can obtain good prior information on the data early in the training process, so as to converge quickly in the later training. Through a series of tests and simulations, the RepVGG-A0 model improves the Top1 accuracy by about 2.6% to 68.56% and the Top5 accuracy by about 0.38% to 94.32% on imagesetter dataset within 25 training epochs. The precision and recall are improved to 68.43% and 68.63%, respectively.",
+      "venue": "Applied and Computational Engineering",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "learning rate warmup transformer"
+    }
+  ]
+}

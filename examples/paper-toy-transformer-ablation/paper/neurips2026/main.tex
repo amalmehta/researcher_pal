@@ -1,0 +1,49 @@
+\documentclass{article}
+
+% Submission version for the NeurIPS 2026 main track: anonymized, with line numbers.
+% Official style files are in template/ (unmodified); compile with
+%   tectonic -Z search-path=template main.tex --keep-logs --keep-intermediates
+\usepackage{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\input{generated/values.tex}
+
+\title{In a Small Transformer, Warmup Matters\\but Attention Scaling Does Not}
+
+\author{Anonymous Author(s)}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/setup}
+\input{sections/results}
+\input{sections/limitations}
+\input{sections/conclusion}
+\label{pw:mainend}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\newpage
+\input{checklist}
+
+\end{document}

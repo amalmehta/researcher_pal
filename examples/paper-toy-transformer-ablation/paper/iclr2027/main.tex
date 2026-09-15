@@ -1,0 +1,47 @@
+\documentclass{article}
+
+% Submission version for ICLR 2027: anonymous while \iclrfinalcopy stays commented out.
+% Official style files are in template/ (unmodified); compile with
+%   tectonic -Z search-path=template main.tex --keep-logs --keep-intermediates
+\usepackage{iclr2027_conference,times}
+\usepackage[T1]{fontenc}  % T1 Times shapes: bold, small caps (the OT1 shapes are missing in Tectonic's bundle)
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\input{generated/values.tex}
+
+\title{In a Small Transformer, Warmup Matters\\but Attention Scaling Does Not}
+
+\author{Anonymous authors}
+
+%\iclrfinalcopy % camera-ready only
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/setup}
+\input{sections/results}
+\input{sections/limitations}
+\input{sections/conclusion}
+\label{pw:mainend}
+
+\input{sections/statements}
+
+\bibliography{refs}
+\bibliographystyle{iclr2027_conference}
+
+\end{document}

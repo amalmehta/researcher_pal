@@ -1,0 +1,311 @@
+{
+  "queries": [
+    "attention softmax temperature scaling",
+    "attention entropy collapse training instability"
+  ],
+  "services": {
+    "arxiv": {
+      "ok": 0,
+      "errors": [
+        "'attention softmax temperature scaling': 429",
+        "'attention entropy collapse training instability': 429"
+      ]
+    },
+    "semanticscholar": {
+      "ok": 1,
+      "errors": [
+        "'attention softmax temperature scaling': 429"
+      ]
+    },
+    "crossref": {
+      "ok": 2,
+      "errors": []
+    }
+  },
+  "records": [
+    {
+      "title": "Explainable hourly global solar radiation forecasting using a CNN\u2013BiLSTM model with temperature scaled softmax attention",
+      "authors": [
+        "Md. Najmul Mowla",
+        "N. Filiz Tumen Ozdil",
+        "Khaled M. Rabie",
+        "Thokozani Shongwe"
+      ],
+      "year": 2026,
+      "ids": {
+        "doi": "10.1038/s41598-026-61388-8"
+      },
+      "url": "https://doi.org/10.1038/s41598-026-61388-8",
+      "abstract": "Abstract\n                  \n                    Accurate global solar radiation (GSR) forecasting is vital for smart grids and resilient energy systems. However, the nonlinear and non-stationary nature of meteorological drivers challenges conventional approaches. This study proposes a lightweight, explainable hybrid deep learning architecture, CNN-BiLSTM-STAM, which integrates convolutional layers for inter-feature pattern extraction, bidirectional long short-term memory (BiLSTM) networks for temporal dependency learning, and a softmax temperature attention mechanism (STAM) with a learnable temperature to adaptively sharpen or smooth attention over time under varying weather conditions. The model is trained and evaluated using an hourly multivariate meteorological dataset collected at Alparslan T\u00fcrke\u015f Science and Technology University in Sar\u0131\u00e7am, Adana, T\u00fcrkiye. Results show that CNN-BiLSTM-STAM outperforms classical machine-learning models, baseline deep networks, and recent attention-based variants for short and mid-term GSR forecasting, achieving RMSE = 66.62\u00a0W/m\n                    \n                      $$^{2}$$\n                    \n                    , MAE = 43.29\u00a0W/m\n                    \n                      $$^{2}$$\n                    \n                    ,\n                    \n                      $$R^{2}$$\n                    \n                    = 0.9381, and Pearson\n                    r\n                    = 0.9715. Additional validation on two independent public meteorological datasets, with the same architecture trained and evaluated separately on each dataset, yielded\n                    \n                      $$R^{2}$$\n                    \n                    values of 0.9188 and 0.9537 and Pearson correlation coefficients of 0.9597 and 0.9768, supporting the external reproducibility of the proposed framework. To support operational trust, Shapley additive explanations (SHAP) are used to quantify feature importance and provide interpretable insights into seasonal and short-term atmospheric influences. With a compact footprint and strong predictive accuracy, the proposed framework supports deployable GSR forecasting for PV operation and scheduling, real-time energy management, and IoT-enabled monitoring systems.\n                  ",
+      "venue": "Scientific Reports",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention softmax temperature scaling"
+    },
+    {
+      "title": "TQL: Scaling Q-Functions with Transformers by Preventing Attention Collapse",
+      "authors": [
+        "Perry Dong",
+        "Kuo-Han Hung",
+        "Alex Swerdlow",
+        "D. Sadigh",
+        "Chelsea Finn"
+      ],
+      "year": 2026,
+      "ids": {
+        "s2": "42c794cd2ce6cf21e8b76f1ee90f432e89f54950",
+        "arxiv": "2602.01439",
+        "doi": "10.48550/arXiv.2602.01439"
+      },
+      "url": "https://www.semanticscholar.org/paper/42c794cd2ce6cf21e8b76f1ee90f432e89f54950",
+      "abstract": "Despite scale driving substantial recent advancements in machine learning, reinforcement learning (RL) methods still primarily use small value functions. Naively scaling value functions -- including with a transformer architecture, which is known to be highly scalable -- often results in learning instability and worse performance. In this work, we ask what prevents transformers from scaling effectively for value functions? Through empirical analysis, we identify the critical failure mode in this scaling: attention scores collapse as capacity increases. Our key insight is that we can effectively prevent this collapse and stabilize training by controlling the entropy of the attention scores, thereby enabling the use of larger models. To this end, we propose Transformer Q-Learning (TQL), a method that unlocks the scaling potential of transformers in learning value functions in RL. Our approach yields up to a 43% improvement in performance when scaling from the smallest to the largest network sizes, while prior methods suffer from performance degradation.",
+      "venue": "arXiv.org",
+      "found_in": [
+        "semanticscholar"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "Curvature-Corrected Rotary Position Embeddings: An Entropy-Invariant Temperature for Mitigating Numerical-Rank Collapse in Long-Context Attention",
+      "authors": [
+        "Joseph Tafataona Mtetwa",
+        "Kingsley A. Ogudo",
+        "Sameerchand Pudaruth"
+      ],
+      "year": 2026,
+      "ids": {
+        "doi": "10.3390/math14142637"
+      },
+      "url": "https://doi.org/10.3390/math14142637",
+      "abstract": "As large language models process ever longer contexts, the positional encoding\u2014most commonly rotary position embeddings (RoPEs)\u2014must remain numerically trustworthy. We give an information-geometric analysis of why the attention matrix becomes ill-conditioned as the sequence length L grows. We first show that the tempting frequency-aliasing explanation fails, because RoPE\u2019s multi-frequency code keeps positions well separated. The mechanism is statistical: at fixed softmax temperature the attention entropy grows like logL, and the rows spread their mass over a collision support (inverse participation ratio) that grows polynomially as La (a\u22480.9 measured), confining the matrix\u2019s trailing singular values and producing a numerical-rank collapse. We prove, and confirm in 50-digit arithmetic, that the spectral condition number is intrinsically ill-posed here, so the numerical rank is the correct diagnostic. From the exact entropy\u2013temperature identity dH/d\u03b2=\u2212\u03b2Varp(e) we derive the entropy-invariant schedule \u03b2\u2605(L)=(L/Lref)c0, Curvature-Corrected RoPE (CC-RoPE), and prove that in the diffuse near-circulant regime it eliminates the collapse at a characterised conditioning\u2013mixing cost, whereas no relative-position-preserving warp can. The two signatures are further confirmed in a trained RoPE model (Pythia-160M); the downstream perplexity effect is framed as a falsifiable prediction.",
+      "venue": "Mathematics",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "Diffusion Attention: Replacing Softmax with Heat Kernel Dynamics",
+      "authors": [
+        "Joshua Curry"
+      ],
+      "year": 2025,
+      "ids": {
+        "doi": "10.2139/ssrn.5953096"
+      },
+      "url": "https://doi.org/10.2139/ssrn.5953096",
+      "abstract": "",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention softmax temperature scaling"
+    },
+    {
+      "title": "Why Softmax Attention Outperforms Linear Attention",
+      "authors": [
+        "Yichuan Deng",
+        "Zhao Song",
+        "Kaijun Yuan",
+        "Tianyi Zhou"
+      ],
+      "year": 2025,
+      "ids": {
+        "doi": "10.1109/bigdata66926.2025.11400978"
+      },
+      "url": "https://doi.org/10.1109/bigdata66926.2025.11400978",
+      "abstract": "",
+      "venue": "2025 IEEE International Conference on Big Data (BigData)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention softmax temperature scaling"
+    },
+    {
+      "title": "Degrees of Freedom for Linear Attention: Distilling Softmax Attention with Optimal Feature Efficiency",
+      "authors": [
+        "Naoki Nishikawa",
+        "Rei Higuchi",
+        "Taiji Suzuki"
+      ],
+      "year": 2025,
+      "ids": {
+        "doi": "10.52202/085713-4615"
+      },
+      "url": "https://doi.org/10.52202/085713-4615",
+      "abstract": "",
+      "venue": "Advances in Neural Information Processing Systems 38",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention softmax temperature scaling"
+    },
+    {
+      "title": "Two failure modes of deep transformers and how to avoid them: a unified theory of signal propagation at initialisation",
+      "authors": [
+        "Alessio Giorlandino",
+        "Sebastian Goldt"
+      ],
+      "year": 2025,
+      "ids": {
+        "s2": "0cabc7ad0df8b4c57043410b9fdeda7d16431b8d",
+        "arxiv": "2505.24333",
+        "doi": "10.48550/arXiv.2505.24333"
+      },
+      "url": "https://www.semanticscholar.org/paper/0cabc7ad0df8b4c57043410b9fdeda7d16431b8d",
+      "abstract": "Finding the right initialisation for neural networks is crucial to ensure smooth training and good performance. In transformers, the wrong initialisation can lead to one of two failure modes of self-attention layers: rank collapse, where all tokens collapse into similar representations, and entropy collapse, where highly concentrated attention scores lead to training instability. While previous work has studied different scaling regimes for transformers, an asymptotically exact, down-to-the constant prescription for how to initialise transformers has so far been lacking. Here, we provide an analytical theory of signal propagation through deep transformers with self-attention, layer normalisation, skip connections and MLP. Our theory yields a simple algorithm to compute trainability diagrams that identify the correct choice of initialisation hyper-parameters for a given architecture. We overcome the key challenge, an exact treatment of the self-attention layer, by establishing a formal parallel with the Random Energy Model from statistical physics. We also analyse gradients in the backward path and determine the regime where gradients vanish at initialisation. We demonstrate the versatility of our framework through three case studies. Our theoretical framework gives a unified perspective on the two failure modes of self-attention and gives quantitative predictions on the scale of both weights and residual connections that guarantee smooth training.",
+      "venue": "arXiv.org",
+      "found_in": [
+        "semanticscholar"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "Variance Sensitivity Induces Attention Entropy Collapse and Instability in Transformers",
+      "authors": [
+        "Jonghyun Hong",
+        "Sungyoon Lee"
+      ],
+      "year": 2025,
+      "ids": {
+        "doi": "10.18653/v1/2025.emnlp-main.421"
+      },
+      "url": "https://doi.org/10.18653/v1/2025.emnlp-main.421",
+      "abstract": "",
+      "venue": "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "LSEAttention is All You Need for Time Series Forecasting",
+      "authors": [
+        "Dizhen Liang"
+      ],
+      "year": 2024,
+      "ids": {
+        "s2": "840ec4eb598b1a681385cbf594d5086843ef6694",
+        "doi": "10.48550/arXiv.2410.23749"
+      },
+      "url": "https://www.semanticscholar.org/paper/840ec4eb598b1a681385cbf594d5086843ef6694",
+      "abstract": "",
+      "venue": "arXiv.org",
+      "found_in": [
+        "semanticscholar"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "Stabilizing Transformer Training by Preventing Attention Entropy Collapse",
+      "authors": [
+        "Shuangfei Zhai",
+        "Tatiana Likhomanenko",
+        "Etai Littwin",
+        "Dan Busbridge",
+        "Jason Ramapuram",
+        "Yizhe Zhang",
+        "Jiatao Gu",
+        "J. Susskind"
+      ],
+      "year": 2023,
+      "ids": {
+        "s2": "385c363ea8e450f362d389f401beaeb5b42a0022",
+        "arxiv": "2303.06296",
+        "doi": "10.48550/arXiv.2303.06296"
+      },
+      "url": "https://www.semanticscholar.org/paper/385c363ea8e450f362d389f401beaeb5b42a0022",
+      "abstract": "Training stability is of great importance to Transformers. In this work, we investigate the training dynamics of Transformers by examining the evolution of the attention layers. In particular, we track the attention entropy for each attention head during the course of training, which is a proxy for model sharpness. We identify a common pattern across different architectures and tasks, where low attention entropy is accompanied by high training instability, which can take the form of oscillating loss or divergence. We denote the pathologically low attention entropy, corresponding to highly concentrated attention scores, as $\\textit{entropy collapse}$. As a remedy, we propose $\\sigma$Reparam, a simple and efficient solution where we reparametrize all linear layers with spectral normalization and an additional learned scalar. We demonstrate that $\\sigma$Reparam successfully prevents entropy collapse in the attention layers, promoting more stable training. Additionally, we prove a tight lower bound of the attention entropy, which decreases exponentially fast with the spectral norm of the attention logits, providing additional motivation for our approach. We conduct experiments with $\\sigma$Reparam on image classification, image self-supervised learning, machine translation, speech recognition, and language modeling tasks. We show that $\\sigma$Reparam provides stability and robustness with respect to the choice of hyperparameters, going so far as enabling training (a) a Vision Transformer {to competitive performance} without warmup, weight decay, layer normalization or adaptive optimizers; (b) deep architectures in machine translation and (c) speech recognition to competitive performance without warmup and adaptive optimizers. Code is available at \\url{https://github.com/apple/ml-sigma-reparam}.",
+      "venue": "International Conference on Machine Learning",
+      "found_in": [
+        "semanticscholar"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "Classical Information and Collapse in Wigner\u2019s Friend Setups",
+      "authors": [
+        "Veronika Baumann"
+      ],
+      "year": 2023,
+      "ids": {
+        "doi": "10.3390/e25101420"
+      },
+      "url": "https://doi.org/10.3390/e25101420",
+      "abstract": "The famous Wigner\u2019s friend experiment considers an observer\u2014the friend\u2014and a superobserver\u2014Wigner\u2014who treats the friend as a quantum system and her interaction with other quantum systems as unitary dynamics. This is at odds with the friend describing this interaction via collapse dynamics, if she interacts with the quantum system in a way that she would consider a measurement. These different descriptions constitute the Wigner\u2019s friend paradox. Extended Wigner\u2019s friend experiments combine the original thought experiment with non-locality setups. This allows for deriving local friendliness inequalities, similar to Bell\u2019s theorem, which can be violated for certain extended Wigner\u2019s friend scenarios. A Wigner\u2019s friend paradox and the violation of local friendliness inequalities require that no classical record exists, which reveals the result the friend observed during her measurement. Otherwise, Wigner agrees with his friend\u2019s description and no local friendliness inequality can be violated. In this article, I introduce classical communication between Wigner and his friend and discuss its effects on the simple as well as extended Wigner\u2019s friend experiments. By controlling the properties of a (quasi) classical communication channel between Wigner and the friend, one can regulate how much outcome information about the friend\u2019s measurement is revealed. This gives a smooth transition between the paradoxical description and the possibility of violating local friendliness inequalities, on the one hand, and the effectively collapsed case, on the other hand.",
+      "venue": "Entropy",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "Voltage instability/collapse - an overview",
+      "authors": [
+        "R.J. Koessler"
+      ],
+      "year": 1997,
+      "ids": {
+        "doi": "10.1049/ic:19970562"
+      },
+      "url": "https://doi.org/10.1049/ic:19970562",
+      "abstract": "",
+      "venue": "IEE Colloquium on Voltage Collapse",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "On the Instability of Softmax Attention-based Deep Learning Models in Side-channel Analysis_supp1-3326667.pdf",
+      "authors": [
+        "suvadeep hajra"
+      ],
+      "year": null,
+      "ids": {
+        "doi": "10.1109/tifs.2023.3326667/mm1"
+      },
+      "url": "https://doi.org/10.1109/tifs.2023.3326667/mm1",
+      "abstract": "",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention softmax temperature scaling"
+    },
+    {
+      "title": "Variance Sensitivity Induces Attention Entropy Collapse in Transformers",
+      "authors": [
+        "J. Hong",
+        "Sungyoon Lee"
+      ],
+      "year": null,
+      "ids": {
+        "s2": "88fc6f475d9ea9cae96972e0afb326ff6b4f826a"
+      },
+      "url": "https://www.semanticscholar.org/paper/88fc6f475d9ea9cae96972e0afb326ff6b4f826a",
+      "abstract": "",
+      "venue": "",
+      "found_in": [
+        "semanticscholar"
+      ],
+      "query": "attention entropy collapse training instability"
+    },
+    {
+      "title": "Figure 11: The ablation experiment training and validation graphs, removing the attention module results in instability and overfitting: (A) accuracy graphs, (B) loss graphs.",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.7717/peerj-cs.4025/fig-11"
+      },
+      "url": "https://doi.org/10.7717/peerj-cs.4025/fig-11",
+      "abstract": "",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "attention entropy collapse training instability"
+    }
+  ]
+}

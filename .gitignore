@@ -1,0 +1,11 @@
+# macOS and Python
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Third-party papers: download from arXiv (see README)
+examples/*/paper.pdf
+
+# Built site (rebuild with: python3.9 site/build_site.py)
+site/dist/

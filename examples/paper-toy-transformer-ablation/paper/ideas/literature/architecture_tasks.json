@@ -1,0 +1,202 @@
+{
+  "queries": [
+    "pre-LN post-LN layer normalization transformer",
+    "transformer synthetic algorithmic tasks sequence reversal"
+  ],
+  "services": {
+    "arxiv": {
+      "ok": 0,
+      "errors": [
+        "'pre-LN post-LN layer normalization transformer': 429",
+        "'transformer synthetic algorithmic tasks sequence reversal': timeout"
+      ]
+    },
+    "semanticscholar": {
+      "ok": 0,
+      "errors": [
+        "'pre-LN post-LN layer normalization transformer': 429",
+        "'transformer synthetic algorithmic tasks sequence reversal': 429"
+      ]
+    },
+    "crossref": {
+      "ok": 2,
+      "errors": []
+    }
+  },
+  "records": [
+    {
+      "title": "CoRN-LN: Compressed Reciprocal Newton Method for Efficient Layer Normalization",
+      "authors": [
+        "Dawon Choi",
+        "Hana Kim",
+        "Ji-Hoon Kim"
+      ],
+      "year": 2025,
+      "ids": {
+        "doi": "10.1109/apccas67402.2025.11376941"
+      },
+      "url": "https://doi.org/10.1109/apccas67402.2025.11376941",
+      "abstract": "",
+      "venue": "2025 IEEE Asia Pacific Conference on Circuits and Systems (APCCAS)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "pre-LN post-LN layer normalization transformer"
+    },
+    {
+      "title": "Synthetic EEG for Motor Imagery Tasks using Transformer-Guided Generative Adversarial Network",
+      "authors": [
+        "Sabrina Soltana",
+        "Arif Istiaque Rupom"
+      ],
+      "year": 2025,
+      "ids": {
+        "doi": "10.1109/iccit68739.2025.11490490"
+      },
+      "url": "https://doi.org/10.1109/iccit68739.2025.11490490",
+      "abstract": "",
+      "venue": "2025 28th International Conference on Computer and Information Technology (ICCIT)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "transformer synthetic algorithmic tasks sequence reversal"
+    },
+    {
+      "title": "Assessing the Impact of Sequence Length Learning on Classification Tasks for Transformer Encoder Models",
+      "authors": [
+        "Jean-Thomas Baillargeon",
+        "Luc Lamontagne"
+      ],
+      "year": 2024,
+      "ids": {
+        "doi": "10.32473/flairs.37.1.135283"
+      },
+      "url": "https://doi.org/10.32473/flairs.37.1.135283",
+      "abstract": "Classification algorithms using Transformer architectures can be affected by the sequence length learning problem whenever observations from different classes have a different length distribution. This problem causes models to use sequence length as a predictive feature instead of relying on important textual information. Although most public datasets are not affected by this problem, privately owned corpora for fields such as medicine and insurance may carry this data bias. The exploitation of this sequence length feature poses challenges throughout the value chain as these machine learning models can be used in critical applications. In this paper, we empirically expose this problem and present approaches to minimize its impacts.",
+      "venue": "The International FLAIRS Conference Proceedings",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "transformer synthetic algorithmic tasks sequence reversal"
+    },
+    {
+      "title": "Lexical Normalization Using Generative Transformer Model (LN-GTM)",
+      "authors": [
+        "Mohamed Ashmawy",
+        "Mohamed Waleed Fakhr",
+        "Fahima A. Maghraby"
+      ],
+      "year": 2023,
+      "ids": {
+        "doi": "10.1007/s44196-023-00366-8"
+      },
+      "url": "https://doi.org/10.1007/s44196-023-00366-8",
+      "abstract": "AbstractLexical Normalization (LN) aims to normalize a nonstandard text to a standard text. This problem is of extreme importance in natural language processing (NLP) when applying existing trained models to user-generated text on social media. Users of social media tend to use non-standard language. They heavily use abbreviations, phonetic substitutions, and colloquial language. Nevertheless, most existing NLP-based systems are often designed with the standard language in mind. However, they suffer from significant performance drops due to the many out-of-vocabulary words found in social media text. In this paper, we present a new (LN) technique by utilizing a transformer-based sequence-to-sequence (Seq2Seq) to build a multilingual characters-to-words machine translation model. Unlike the majority of current methods, the proposed model is capable of recognizing and generating previously unseen words. Also, it greatly reduces the difficulties involved in tokenizing and preprocessing the nonstandard text input and the standard text output. The proposed model outperforms the winning entry to the Multilingual Lexical Normalization (MultiLexNorm) shared task at W-NUT 2021 on both intrinsic and extrinsic evaluations.",
+      "venue": "International Journal of Computational Intelligence Systems",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "pre-LN post-LN layer normalization transformer"
+    },
+    {
+      "title": "Multimodal Sentiment Analysis Based on Pre-LN Transformer Interaction",
+      "authors": [
+        "Huihui Song",
+        "Jianping Li",
+        "Zhiping Xia",
+        "Zongping Yang",
+        "Xiao Du"
+      ],
+      "year": 2022,
+      "ids": {
+        "doi": "10.1109/itoec53115.2022.9734328"
+      },
+      "url": "https://doi.org/10.1109/itoec53115.2022.9734328",
+      "abstract": "",
+      "venue": "2022 IEEE 6th Information Technology and Mechatronics Engineering Conference (ITOEC)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "pre-LN post-LN layer normalization transformer"
+    },
+    {
+      "title": "A Structural Transformer with Relative Positions in Trees for Code-to-Sequence Tasks",
+      "authors": [
+        "Johannes Villmow",
+        "Adrian Ulges",
+        "Ulrich Schwanecke"
+      ],
+      "year": 2021,
+      "ids": {
+        "doi": "10.1109/ijcnn52387.2021.9533717"
+      },
+      "url": "https://doi.org/10.1109/ijcnn52387.2021.9533717",
+      "abstract": "",
+      "venue": "2021 International Joint Conference on Neural Networks (IJCNN)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "transformer synthetic algorithmic tasks sequence reversal"
+    },
+    {
+      "title": "Crystal Structures of Ln4Ni3O8 (Ln = La, Nd) Triple Layer T-type Nickelates",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.1021/ic701480v.s002"
+      },
+      "url": "https://doi.org/10.1021/ic701480v.s002",
+      "abstract": "",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "pre-LN post-LN layer normalization transformer"
+    },
+    {
+      "title": "Synthesis and Structures of Ln(II) and Ln(III) Dialkyls Derived from LnI2 (Ln = Nd, Tm, Yb)",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.1021/om0611711.s001"
+      },
+      "url": "https://doi.org/10.1021/om0611711.s001",
+      "abstract": "",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "pre-LN post-LN layer normalization transformer"
+    },
+    {
+      "title": "Sorting Signed Permutations by Reversal (Reversal Sequence), 2004; Tannier, Sagot",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.1007/springerreference_57903"
+      },
+      "url": "https://doi.org/10.1007/springerreference_57903",
+      "abstract": "",
+      "venue": "SpringerReference",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "transformer synthetic algorithmic tasks sequence reversal"
+    },
+    {
+      "title": "Geomagnetic reversal sequence: Statistical structure",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.1007/springerreference_4153"
+      },
+      "url": "https://doi.org/10.1007/springerreference_4153",
+      "abstract": "",
+      "venue": "SpringerReference",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "transformer synthetic algorithmic tasks sequence reversal"
+    }
+  ]
+}

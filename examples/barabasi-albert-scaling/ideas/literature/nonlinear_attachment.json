@@ -1,0 +1,188 @@
+{
+  "queries": [
+    "nonlinear preferential attachment",
+    "Krapivsky Redner Leyvraz connectivity growing random networks"
+  ],
+  "services": {
+    "arxiv": {
+      "ok": 0,
+      "errors": [
+        "'nonlinear preferential attachment': 429",
+        "'Krapivsky Redner Leyvraz connectivity growing random networks': timeout"
+      ]
+    },
+    "semanticscholar": {
+      "ok": 0,
+      "errors": [
+        "'nonlinear preferential attachment': 429",
+        "'Krapivsky Redner Leyvraz connectivity growing random networks': 429"
+      ]
+    },
+    "crossref": {
+      "ok": 2,
+      "errors": []
+    }
+  },
+  "records": [
+    {
+      "title": "On dynamic random graphs with degree homogenization via anti-preferential attachment probabilities",
+      "authors": [
+        "Umberto De Ambroggio",
+        "Federico Polito",
+        "Laura Sacerdote"
+      ],
+      "year": 2020,
+      "ids": {
+        "doi": "10.1016/j.physd.2020.132689"
+      },
+      "url": "https://doi.org/10.1016/j.physd.2020.132689",
+      "abstract": "",
+      "venue": "Physica D: Nonlinear Phenomena",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "nonlinear preferential attachment"
+    },
+    {
+      "title": "Scale-free behavior of networks with the copresence of preferential and uniform attachment rules",
+      "authors": [
+        "Angelica Pachon",
+        "Laura Sacerdote",
+        "Shuyi Yang"
+      ],
+      "year": 2018,
+      "ids": {
+        "doi": "10.1016/j.physd.2018.01.005"
+      },
+      "url": "https://doi.org/10.1016/j.physd.2018.01.005",
+      "abstract": "",
+      "venue": "Physica D: Nonlinear Phenomena",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "nonlinear preferential attachment"
+    },
+    {
+      "title": "Connectivity of Growing Ra ndom Networks",
+      "authors": [
+        "P.L. Krapivsky",
+        "S. Redner",
+        "F. Leyvraz"
+      ],
+      "year": 2011,
+      "ids": {
+        "doi": "10.1515/9781400841356.357"
+      },
+      "url": "https://doi.org/10.1515/9781400841356.357",
+      "abstract": "",
+      "venue": "The Structure and Dynamics of Networks",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "Krapivsky Redner Leyvraz connectivity growing random networks"
+    },
+    {
+      "title": "Rate Equation Approach for Growing Networks",
+      "authors": [
+        "P.L. Krapivsky",
+        "S. Redner"
+      ],
+      "year": 2003,
+      "ids": {
+        "doi": "10.1007/978-3-540-44943-0_2"
+      },
+      "url": "https://doi.org/10.1007/978-3-540-44943-0_2",
+      "abstract": "",
+      "venue": "Lecture Notes in Physics",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "Krapivsky Redner Leyvraz connectivity growing random networks"
+    },
+    {
+      "title": "Statistics of Changes in Lead Node in Connectivity-Driven Networks",
+      "authors": [
+        "P. L. Krapivsky",
+        "S. Redner"
+      ],
+      "year": 2002,
+      "ids": {
+        "doi": "10.1103/physrevlett.89.258703"
+      },
+      "url": "https://doi.org/10.1103/physrevlett.89.258703",
+      "abstract": "",
+      "venue": "Physical Review Letters",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "Krapivsky Redner Leyvraz connectivity growing random networks"
+    },
+    {
+      "title": "Organization of growing random networks",
+      "authors": [
+        "P. L. Krapivsky",
+        "S. Redner"
+      ],
+      "year": 2001,
+      "ids": {
+        "doi": "10.1103/physreve.63.066123"
+      },
+      "url": "https://doi.org/10.1103/physreve.63.066123",
+      "abstract": "",
+      "venue": "Physical Review E",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "Krapivsky Redner Leyvraz connectivity growing random networks"
+    },
+    {
+      "title": "Connectivity of Growing Random Networks",
+      "authors": [
+        "P. L. Krapivsky",
+        "S. Redner",
+        "F. Leyvraz"
+      ],
+      "year": 2000,
+      "ids": {
+        "doi": "10.1103/physrevlett.85.4629"
+      },
+      "url": "https://doi.org/10.1103/physrevlett.85.4629",
+      "abstract": "",
+      "venue": "Physical Review Letters",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "Krapivsky Redner Leyvraz connectivity growing random networks"
+    },
+    {
+      "title": "Preferential attachment",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.29172/f6791e7c5735454e91497ee3d36e1f69"
+      },
+      "url": "https://doi.org/10.29172/f6791e7c-5735-454e-9149-7ee3d36e1f69",
+      "abstract": "",
+      "venue": "Physics Subject Headings (PhySH)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "nonlinear preferential attachment"
+    },
+    {
+      "title": "Preferential attachment models",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.29172/64545bf5-eb34-4338-9a4b-e369a2733114"
+      },
+      "url": "https://doi.org/10.29172/64545bf5-eb34-4338-9a4b-e369a2733114",
+      "abstract": "",
+      "venue": "Physics Subject Headings (PhySH)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "nonlinear preferential attachment"
+    }
+  ]
+}

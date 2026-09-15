@@ -1,0 +1,23 @@
+{
+  "python": "3.9.1",
+  "torch": "2.2.2",
+  "machine": "x86_64",
+  "processor": "i386",
+  "torch_threads": 8,
+  "device": "cpu",
+  "d_model": 64,
+  "heads": 4,
+  "d_ff": 128,
+  "layers": 2,
+  "batch_size": 64,
+  "sequence_length": 8,
+  "vocab_size": 12,
+  "label_smoothing": 0.1,
+  "eval_sequences": 500,
+  "steps": 1500,
+  "seeds": [
+    0,
+    1,
+    2
+  ]
+}
