@@ -1,0 +1,23 @@
+\section{Introduction}
+\label{sec:intro}
+
+\citet{vaswani2017attention} describe several training details in a single sentence each, and two of them exist to
+keep optimization stable. The first is a learning-rate schedule that increases linearly for a number of warmup
+steps before decaying with the inverse square root of the step. The second is a factor of $1/\sqrt{d_k}$ on the
+attention logits, motivated by the observation that dot products grow with the key dimension $d_k$ and push the
+softmax into regions with small gradients. Both details are now standard. For a practitioner building a small
+Transformer, however, it is not obvious which of the two actually matters.
+
+We isolate the two with a $2\times 2$ ablation on a task where success is unambiguous: reversing digit sequences
+with a small encoder--decoder Transformer. The architecture, data, optimizer, seeds and training budget are held
+fixed, and only warmup and attention scaling change (Figure~\ref{fig:setup}); a follow-up control separates the warmup ramp from the size of the initial
+learning rate. Our contributions are:
+\begin{itemize}
+  \item \textbf{Warmup matters in this setting.} All \valRunsNoWarmup{} runs without warmup, with or without
+        attention scaling, fail to learn the task, and a control that removes only the ramp while capping the
+        learning rate at the warmup peak solves it in just \valRampSolved{} of \valRampRuns{} seeds (Section~\ref{sec:results}, Figure~\ref{fig:loss}).
+  \item \textbf{Attention scaling does not.} Removing it leaves accuracy, attention alignment and final loss
+        essentially unchanged (Table~\ref{tab:results}).
+  \item \textbf{The successful runs learn the expected mechanism.} With warmup, an encoder--decoder attention head
+        attends to the source token being copied at almost every target position (Section~\ref{sec:results}).
+\end{itemize}

@@ -1,0 +1,205 @@
+{
+  "queries": [
+    "scale-free networks are rare",
+    "power-law distributions empirical data"
+  ],
+  "services": {
+    "arxiv": {
+      "ok": 0,
+      "errors": [
+        "'scale-free networks are rare': 429",
+        "'power-law distributions empirical data': 429"
+      ]
+    },
+    "semanticscholar": {
+      "ok": 0,
+      "errors": [
+        "'scale-free networks are rare': 429",
+        "'power-law distributions empirical data': 429"
+      ]
+    },
+    "crossref": {
+      "ok": 2,
+      "errors": []
+    }
+  },
+  "records": [
+    {
+      "title": "Revisiting and Modeling Power-Law Distributions in Empirical Outage Data of Power Systems",
+      "authors": [
+        "B\u00e1lint Hartmann",
+        "Shengfeng Deng",
+        "G\u00e9za \u00d3dor",
+        "Jeffrey Kelling"
+      ],
+      "year": 2023,
+      "ids": {
+        "doi": "10.1103/prxenergy.2.033007"
+      },
+      "url": "https://doi.org/10.1103/prxenergy.2.033007",
+      "abstract": "",
+      "venue": "PRX Energy",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "power-law distributions empirical data"
+    },
+    {
+      "title": "Scale free is not rare in international trade networks",
+      "authors": [
+        "Linqing Liu",
+        "Mengyun Shen",
+        "Chang Tan"
+      ],
+      "year": 2021,
+      "ids": {
+        "doi": "10.1038/s41598-021-92764-1"
+      },
+      "url": "https://doi.org/10.1038/s41598-021-92764-1",
+      "abstract": "AbstractFailing to consider the strong correlations between weights and topological properties in capacity-weighted networks renders test results on the scale-free property unreliable. According to the preferential attachment mechanism, existing high-degree nodes normally attract new nodes. However, in capacity-weighted networks, the weights of existing edges increase as the network grows. We propose an optimized simplification method and apply it to international trade networks. Our study covers more than 1200 product categories annually from 1995 to 2018. We find that, on average, 38%, 38% and 69% of product networks in export, import and total trade are scale-free. Furthermore, the scale-free characteristics differ depending on the technology. Counter to expectations, the exports of high-technology products are distributed worldwide rather than concentrated in a few developed countries. Our research extends the scale-free exploration of capacity-weighted networks and demonstrates that choosing appropriate filtering methods can clarify the properties of complex networks.",
+      "venue": "Scientific Reports",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "scale-free networks are rare"
+    },
+    {
+      "title": "Rare and everywhere: Perspectives on scale-free networks",
+      "authors": [
+        "Petter Holme"
+      ],
+      "year": 2019,
+      "ids": {
+        "doi": "10.1038/s41467-019-09038-8"
+      },
+      "url": "https://doi.org/10.1038/s41467-019-09038-8",
+      "abstract": "",
+      "venue": "Nature Communications",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "scale-free networks are rare"
+    },
+    {
+      "title": "Scale-free networks are rare",
+      "authors": [
+        "Anna D. Broido",
+        "Aaron Clauset"
+      ],
+      "year": 2019,
+      "ids": {
+        "doi": "10.1038/s41467-019-08746-5"
+      },
+      "url": "https://doi.org/10.1038/s41467-019-08746-5",
+      "abstract": "Abstract\n                  \n                    Real-world networks are often claimed to be scale free,\u00a0meaning that the fraction of nodes with degree\n                    k\n                    follows a power law\n                    k\n                    \n                      \u2212\n                      \u03b1\n                    \n                    , a pattern with broad implications for the structure and dynamics of complex systems. However, the universality of scale-free networks remains controversial. Here, we organize different definitions of scale-free networks and construct a severe test of their empirical prevalence using state-of-the-art statistical tools applied to nearly 1000 social, biological, technological, transportation, and information networks. Across these networks, we find robust evidence that strongly scale-free structure is empirically rare, while for most networks, log-normal distributions fit the data as well or better than power laws. Furthermore, social networks are at best weakly scale free, while a handful of technological and biological networks appear strongly scale free. These findings highlight the structural diversity of real-world networks and the need for new theoretical explanations of these non-scale-free patterns.\n                  ",
+      "venue": "Nature Communications",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "scale-free networks are rare"
+    },
+    {
+      "title": "Empirical Methods for Dynamic Power Law Distributions in the Social Sciences",
+      "authors": [
+        "Ricardo T. Fernholz"
+      ],
+      "year": 2016,
+      "ids": {
+        "doi": "10.2139/ssrn.2735847"
+      },
+      "url": "https://doi.org/10.2139/ssrn.2735847",
+      "abstract": "",
+      "venue": "SSRN Electronic Journal",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "power-law distributions empirical data"
+    },
+    {
+      "title": "Power-law distributions in binned empirical data",
+      "authors": [
+        "Yogesh Virkar",
+        "Aaron Clauset"
+      ],
+      "year": 2014,
+      "ids": {
+        "doi": "10.1214/13-aoas710"
+      },
+      "url": "https://doi.org/10.1214/13-aoas710",
+      "abstract": "",
+      "venue": "The Annals of Applied Statistics",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "power-law distributions empirical data"
+    },
+    {
+      "title": "Power-Law Distributions in Empirical Data",
+      "authors": [
+        "Aaron Clauset",
+        "Cosma Rohilla Shalizi",
+        "M. E. J. Newman"
+      ],
+      "year": 2009,
+      "ids": {
+        "doi": "10.1137/070710111"
+      },
+      "url": "https://doi.org/10.1137/070710111",
+      "abstract": "Power-law distributions occur in many situations of scientific interest and have significant consequences for our understanding of natural and man-made phenomena. Unfortunately, the detection and characterization of power laws is complicated by the large fluctuations that occur in the tail of the distribution\u2014the part of the distribution representing large but rare events\u2014and by the difficulty of identifying the range over which power-law behavior holds. Commonly used methods for analyzing power-law data, such as least-squares fitting, can produce substantially inaccurate estimates of parameters for power-law distributions, and even in cases where such methods return accurate answers they are still unsatisfactory because they give no indication of whether the data obey a power law at all. Here we present a principled statistical framework for discerning and quantifying power-law behavior in empirical data. Our approach combines maximum-likelihood fitting methods with goodness-of-fit tests based on the Kolmogorov\u2013Smirnov (KS) statistic and likelihood ratios. We evaluate the effectiveness of the approach with tests on synthetic data and give critical comparisons to previous approaches. We also apply the proposed methods to twenty-four real-world data sets from a range of different disciplines, each of which has been conjectured to follow a power-law distribution. In some cases we find these conjectures to be consistent with the data, while in others the power law is ruled out.",
+      "venue": "SIAM Review",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "power-law distributions empirical data"
+    },
+    {
+      "title": "Empirical Distributions of Log-Returns: Between the Stretched Exponential and the Power Law?",
+      "authors": [
+        "Yannick Malevergne",
+        "Vladilen Pisarenko",
+        "Didier Sornette"
+      ],
+      "year": 2003,
+      "ids": {
+        "doi": "10.2139/ssrn.410261"
+      },
+      "url": "https://doi.org/10.2139/ssrn.410261",
+      "abstract": "A large consensus now seems to take for granted that the distributions of empirical returns of financial time series are regularly varying, with a tail exponent b close to 3. First, we show by synthetic tests performed on time series with time dependence in the volatility with both Pareto and Stretched-Exponential distributions that for sample of moderate size, the standard generalized extreme value (GEV) estimator is quite inefficient due to the possibly slow convergence toward the asymptotic theoretical distribution and the existence of biases in presence of dependence between data. Thus it cannot distinguish reliably between rapidly and regularly varying classes of distributions. The Generalized Pareto distribution (GPD)estimator works better, but still lacks power in the presence of strong dependence. Then, we use a parametric representation of the tail of the distributions of returns of 100 years of daily return of the Dow Jones Industrial Average and over 1 years of 5-minutes returns of the Nasdaq Composite index, encompassing both a regularly varying distribution in one limit of the parameters and rapidly varying distributions of the class of the Stretched-Exponential (SE) and Log-Weibull distributions in other limits. Using the method of nested hypothesis testing (Wilks' theorem), we conclude that both the SE distributions and Pareto distributions provide reliable descriptions of the data and cannot be distinguished for sufficiently high thresholds. However, the exponent b of the Pareto increases with the quantiles and its growth does not seem exhausted for the highest quantiles of three out of the four tail distributions investigated here. Correlatively, the exponent c of the SE model decreases and seems to tend to zero.\r\nBased on the discovery that the SE distribution tends to the Pareto distribution in a certain limit such that the Pareto\r\n(or power law) distribution can be approximated with any desired accuracy on an arbitrary interval by a suitable adjustment of the parameters of the SE distribution,we demonstrate that Wilks' test of nested hypothesis still works for the non-exactly nested comparison between the SE and Pareto distributions.\r\nThe SE distribution is found significantly better over the whole quantile range but becomes unnecessary beyond the 95% quantiles compared with the Pareto law.  Similar conclusions hold for the log-Weibull model with respect to the Pareto distribution.\r\nSumming up all the evidence provided by our battery of tests, it seems that the tails ultimately decay slower than any SE but probably faster than power laws with reasonable exponents. Thus, from a practical view point, the log-Weibull model, which provides a smooth interpolation between SE and PD, can be considered as an appropriate approximation of the sample distributions. We finally discuss the implications of our results on the \"moment condition failure\" and for risk estimation and management.",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "power-law distributions empirical data"
+    },
+    {
+      "title": "Scale-Free Networks",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.1007/springerreference_221931"
+      },
+      "url": "https://doi.org/10.1007/springerreference_221931",
+      "abstract": "",
+      "venue": "SpringerReference",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "scale-free networks are rare"
+    },
+    {
+      "title": "Fractal and Transfractal Scale-Free Networks",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.1007/springerreference_60403"
+      },
+      "url": "https://doi.org/10.1007/springerreference_60403",
+      "abstract": "",
+      "venue": "SpringerReference",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "scale-free networks are rare"
+    }
+  ]
+}

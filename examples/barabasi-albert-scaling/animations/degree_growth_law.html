@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  researcher-pal animation template.
+  Copy to papers/<slug>/animations/<concept-id>.html and edit ONLY the block between
+  "EDIT BELOW" and "EDIT ABOVE" (plus the <title>). The player below it (timeline,
+  controls, scrubbing, keyboard, KaTeX) is shared.
+-->
+<title>Rich get richer: from k_i(t) to γ = 3 · researcher-pal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #0e1013; --panel: #171a1f; --line: #2a2f37; --ink: #ece8df; --dim: #9aa1a9;
+    --blue: #58c4dd; --yellow: #f4d35e; --green: #83c167; --red: #fc6255;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 20px 16px 48px; }
+  header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  header p { margin: 2px 0 0; color: var(--dim); font-size: 13px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; margin-top: 16px; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+  .player { background: #000; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  svg#stage { display: block; width: 100%; height: auto; }
+  svg text { font-family: inherit; font-variant-numeric: tabular-nums; }
+  .caption { min-height: 3.4em; padding: 12px 16px; font-size: 17px; border-top: 1px solid var(--line); background: var(--panel); }
+  .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px;
+    background: var(--panel); border-top: 1px solid var(--line); }
+  .controls button { background: #232830; color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 10px; min-width: 42px; font: inherit; cursor: pointer; }
+  .controls button:hover { border-color: var(--blue); }
+  .controls input[type=range] { flex: 1; min-width: 140px; accent-color: var(--blue); }
+  .counter { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 84px; text-align: right; }
+  .keys { color: var(--dim); font-size: 12px; margin: 6px 2px 0; }
+  aside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .card h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .equation { overflow-x: auto; font-size: 15px; }
+  .param { margin-bottom: 14px; }
+  .param:last-child { margin-bottom: 0; }
+  .param label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  .param output { color: var(--yellow); font-variant-numeric: tabular-nums; }
+  .param input { width: 100%; accent-color: var(--yellow); }
+  .param small { display: block; color: var(--dim); }
+  .param button { background: none; border: 0; padding: 0; color: var(--blue); font: inherit; font-size: 12px; cursor: pointer; }
+  ul.notes { margin: 0; padding-left: 18px; color: var(--dim); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="title"></h1>
+    <p id="source"></p>
+  </header>
+  <div class="card" style="margin-top:14px"><div class="equation" id="equation"></div></div>
+  <div class="layout">
+    <section>
+      <div class="player">
+        <svg id="stage" viewBox="0 0 800 450" role="img"></svg>
+        <div class="caption" id="caption" aria-live="polite"></div>
+        <div class="controls">
+          <button id="prev" title="Previous step (←)" aria-label="Previous step">⏮</button>
+          <button id="play" title="Play / pause (space)" aria-label="Play or pause">▶</button>
+          <button id="next" title="Play next step (→)" aria-label="Next step">⏭</button>
+          <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline">
+          <span class="counter" id="counter"></span>
+        </div>
+      </div>
+      <p class="keys">Space: play/pause · ← →: step · drag the timeline to scrub</p>
+    </section>
+    <aside>
+      <div class="card"><h2>Parameters</h2><div id="params"></div></div>
+      <div class="card"><h2>What to notice</h2><ul class="notes" id="notes"></ul></div>
+    </aside>
+  </div>
+</main>
+
+<script>
+/* ============================ EDIT BELOW ============================ */
+
+const CONFIG = {
+  title: "Rich get richer: from k_i(t) to γ = 3",
+  source: "Barabási & Albert, Emergence of Scaling in Random Networks · ¶10 (E6–E8), Fig. 2C",
+  equation: String.raw`\frac{\partial k_i}{\partial t} = \frac{k_i}{2t} \;\Rightarrow\; {\color{#f4d35e}k_i(t) = m\left(\tfrac{t}{t_i}\right)^{1/2}} \;\Rightarrow\; P(k_i < k) = P\!\left(t_i > \tfrac{m^2 t}{k^2}\right) \;\Rightarrow\; P(k) = \frac{2m^2}{k^3}`,
+  notes: [
+    "The simulation grows 5,000 steps from a complete graph on $m_0 = \\max(m, 2)$ vertices (not in paper).",
+    "The prediction is mean-field: it describes the typical vertex of a given age, and real vertices scatter around it.",
+    "Nothing here is fitted. Every yellow curve is the paper's formula with your $m$ and $t$.",
+  ],
+};
+
+const PARAMS = [
+  { id: "t1", label: "Arrival time t₁ (vertex A)", min: 1, max: 200, step: 1, value: 5, paperValue: 5, help: "Fig. 2C follows vertices added at t₁ = 5 and t₂ = 95." },
+  { id: "t2", label: "Arrival time t₂ (vertex B)", min: 1, max: 2000, step: 1, value: 95, paperValue: 95, help: "" },
+  { id: "m", label: "m (edges per new vertex)", min: 1, max: 5, step: 1, value: 5, paperValue: 5, help: "The exponent 1/2 doesn't depend on m." },
+  { id: "k", label: "Degree threshold k", min: 5, max: 150, step: 1, value: 20, help: "Used in the last two steps." },
+];
+
+const STEPS = [
+  { caption: "Follow two vertices as the network grows: A arrives at $t_1$, B at $t_2$. Both start with $m$ edges, and A has a head start.", duration: 4 },
+  { caption: "The continuum prediction: $\\partial k_i/\\partial t = m\\,\\Pi(k_i) = k_i/2t$, so ${\\color{#f4d35e}k_i(t) = m(t/t_i)^{1/2}}$, a line of slope 1/2 on log-log axes (the dashed lines).", duration: 4 },
+  { caption: "Every vertex at the end, degree against arrival time. Early arrivals are rich, and the curve $m(t/t_i)^{1/2}$ runs through the cloud.", duration: 3.5 },
+  { caption: "Degree below $k$ means arriving after $t_i = m^2t/k^2$ (vertical line). Drag $k$ and compare the fraction of vertices to the right with the formula.", duration: 4 },
+  { caption: "Arrival times are uniform, so $P(k_i < k) = 1 - m^2t/k^2(t + m_0)$. Measured (blue) matches predicted (yellow); differentiating in $k$ gives $P(k) = 2m^2/k^3$.", duration: 4.5 },
+];
+
+const GL_CACHE = {};
+// Preferential growth for T steps; stores every vertex's degree at ~60 log-spaced checkpoints.
+function growthRun(m) {
+  if (GL_CACHE[m]) return GL_CACHE[m];
+  let seed = 4242 + m;
+  const rand = () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const T = 5000, m0 = Math.max(m, 2), N = m0 + T;
+  const degree = new Int32Array(N), ends = [];
+  for (let a = 0; a < m0; a++) for (let b = a + 1; b < m0; b++) { ends.push(a, b); degree[a]++; degree[b]++; }
+  const checkpoints = [...new Set(Array.from({ length: 60 }, (_, i) => Math.round(Math.pow(T, i / 59))))];
+  const snapshots = [];
+  let next = 0;
+  for (let s = 1; s <= T; s++) {
+    const n = m0 + s - 1, chosen = new Set();
+    while (chosen.size < m) chosen.add(ends[Math.floor(rand() * ends.length)]);
+    for (const target of chosen) { ends.push(n, target); degree[n]++; degree[target]++; }
+    if (s === checkpoints[next]) { snapshots.push(degree.slice()); next++; }
+  }
+  return (GL_CACHE[m] = { T, m0, N, degree, checkpoints, snapshots, image: null });
+}
+
+function draw({ S, C, step, p, params, during, fmt }) {
+  const m = params.m, run = growthRun(m), T = run.T, m0 = run.m0;
+  const X0 = 100, X1 = 740, Y0 = 70, Y1 = 350;
+  const lx = t => X0 + (Math.log10(t) / Math.log10(T)) * (X1 - X0);
+  const ky = k => Y1 - (Math.log10(k) / 3) * (Y1 - Y0);
+  const idx = ti => m0 + ti - 1; // vertex index of the vertex that arrived at step ti
+  const t1 = Math.min(params.t1, T), t2 = Math.min(params.t2, T);
+
+  const logAxes = (xLabel, yLabel) => {
+    S.line(X0, Y1, X1, Y1, { stroke: C.dim, width: 1 });
+    S.line(X0, Y0, X0, Y1, { stroke: C.dim, width: 1 });
+    [1, 10, 100, 1000, 5000].forEach(t => S.text(lx(t), Y1 + 18, String(t), { size: 11, fill: C.dim, anchor: "middle" }));
+    [1, 10, 100, 1000].forEach(k => S.text(X0 - 8, ky(k) + 4, String(k), { size: 11, fill: C.dim, anchor: "end" }));
+    S.text((X0 + X1) / 2, Y1 + 40, xLabel, { size: 13, fill: C.dim, anchor: "middle" });
+    S.text(X0 - 40, Y0 - 12, yLabel, { size: 13, fill: C.dim });
+  };
+
+  if (step <= 1) {
+    logAxes("time t (vertices added)", "degree k");
+    const reveal = step === 0 ? during(p, 0.1, 0.95) : 1;
+    const tNow = Math.pow(T, reveal);
+    [[t1, C.blue, "A"], [t2, C.green, "B"]].forEach(([ti, color, name]) => {
+      const pts = [];
+      run.checkpoints.forEach((cp, c) => { if (cp >= ti && cp <= tNow) pts.push([lx(cp), ky(Math.max(1, run.snapshots[c][idx(ti)]))]); });
+      if (pts.length > 1) S.polyline(pts, { stroke: color, width: 3 });
+      if (pts.length) { const last = pts[pts.length - 1]; S.circle(last[0], last[1], 5, { fill: color }); const right = last[0] > 600; S.text(last[0] + (right ? -10 : 8), last[1] - 10, name + " (t_i = " + ti + ")", { size: 13, fill: color, anchor: right ? "end" : "start" }); }
+      if (step === 1) {
+        const pred = [];
+        for (let t = ti; t <= T; t *= 1.15) pred.push([lx(t), ky(m * Math.sqrt(t / ti))]);
+        pred.push([lx(T), ky(m * Math.sqrt(T / ti))]);
+        S.polyline(pred.slice(0, Math.max(2, Math.ceil(during(p, 0.1, 0.9) * pred.length))), { stroke: C.yellow, width: 2, dash: "6 5" });
+      }
+    });
+    if (step === 1) {
+      const kA = run.degree[idx(t1)], kB = run.degree[idx(t2)];
+      S.text(X1, 425, "at t = 5000: A has " + kA + " (predicted " + fmt(m * Math.sqrt(T / t1), 0) + "), B has " + kB + " (predicted " + fmt(m * Math.sqrt(T / t2), 0) + ")", { size: 13, fill: C.ink, anchor: "end" });
+    }
+  }
+
+  if (step >= 2) {
+    logAxes("arrival time t_i", step === 4 ? "" : "final degree k_i");
+    if (step <= 3) {
+      if (!run.image) {
+        const canvas = document.createElement("canvas");
+        canvas.width = X1 - X0; canvas.height = Y1 - Y0;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgba(88, 196, 221, 0.35)";
+        for (let ti = 1; ti <= T; ti++) {
+          const k = run.degree[idx(ti)];
+          ctx.fillRect(lx(ti) - X0 - 1, ky(k) - Y0 - 1, 2.2, 2.2);
+        }
+        run.image = canvas.toDataURL();
+      }
+      const g = S.group({ opacity: step === 2 ? during(p, 0, 0.4) : 1 });
+      el("image", { href: run.image, x: X0, y: Y0, width: X1 - X0, height: Y1 - Y0 }, g);
+      const curve = [];
+      for (let ti = 1; ti <= T; ti *= 1.1) curve.push([lx(ti), ky(m * Math.sqrt(T / ti))]);
+      curve.push([lx(T), ky(m)]);
+      S.polyline(curve, { stroke: C.yellow, width: 3, opacity: step === 2 ? during(p, 0.4, 0.9) : 1 });
+    }
+    if (step === 3) {
+      const k = params.k, tStar = (m * m * T) / (k * k);
+      S.line(X0, ky(k), X1, ky(k), { stroke: C.orange, width: 1.5, dash: "4 4" });
+      S.text(X0 + 6, ky(k) - 6, "k = " + k, { size: 12, fill: C.orange });
+      if (tStar >= 1 && tStar <= T) {
+        S.rect(lx(tStar), Y0, X1 - lx(tStar), Y1 - Y0, { fill: C.orange, opacity: 0.08 * during(p, 0.2, 0.6) });
+        S.line(lx(tStar), Y0, lx(tStar), Y1, { stroke: C.orange, width: 2 });
+        S.text(lx(tStar) + 6, Y0 + 14, "t_i = m²t/k² = " + fmt(tStar, 0), { size: 12, fill: C.orange });
+      }
+      let below = 0;
+      for (let j = 0; j < run.N; j++) if (run.degree[j] < k) below++;
+      const predicted = 1 - (m * m * T) / (k * k * (T + m0));
+      S.text(X1, 425, "fraction with degree < " + k + ": measured " + fmt(below / run.N, 3) + " · predicted " + fmt(Math.max(0, predicted), 3), { size: 13, fill: C.ink, anchor: "end" });
+    }
+    if (step === 4) {
+      // Replace the scatter with the cumulative distribution P(k_i < k) as a function of k.
+      S.rect(X0 + 1, Y0 - 20, X1 - X0, Y1 - Y0 + 60, { fill: C.bg });
+      const kx = k => X0 + (Math.log10(k) / Math.log10(300)) * (X1 - X0), py = P => Y1 - P * (Y1 - Y0);
+      S.line(X0, Y1, X1, Y1, { stroke: C.dim, width: 1 });
+      [1, 3, 10, 30, 100, 300].forEach(k => S.text(kx(k), Y1 + 18, String(k), { size: 11, fill: C.dim, anchor: "middle" }));
+      [0, 0.5, 1].forEach(P => S.text(X0 - 8, py(P) + 4, String(P), { size: 11, fill: C.dim, anchor: "end" }));
+      S.text((X0 + X1) / 2, Y1 + 40, "degree threshold k", { size: 13, fill: C.dim, anchor: "middle" });
+      S.text(X0 - 40, Y0 - 12, "P(k_i < k)", { size: 13, fill: C.dim });
+      const sorted = Array.from(run.degree).sort((a, b) => a - b);
+      const measured = [], predicted = [];
+      for (let k = 1; k <= 300; k *= 1.05) {
+        let lo = 0, hi = sorted.length;
+        while (lo < hi) { const mid = (lo + hi) >> 1; if (sorted[mid] < k) lo = mid + 1; else hi = mid; }
+        measured.push([kx(k), py(lo / sorted.length)]);
+        if (k >= m) predicted.push([kx(k), py(Math.max(0, 1 - (m * m * T) / (k * k * (T + m0))))]);
+      }
+      const r = during(p, 0.1, 0.8);
+      S.polyline(measured.slice(0, Math.max(2, Math.ceil(r * measured.length))), { stroke: C.blue, width: 3 });
+      S.polyline(predicted.slice(0, Math.max(2, Math.ceil(r * predicted.length))), { stroke: C.yellow, width: 2, dash: "6 5" });
+      const kk = params.k;
+      let belowK = 0;
+      for (let j = 0; j < run.N; j++) if (run.degree[j] < kk) belowK++;
+      const predK = Math.max(0, 1 - (m * m * T) / (kk * kk * (T + m0)));
+      S.line(kx(kk), Y0, kx(kk), Y1, { stroke: C.orange, width: 1.5, dash: "4 4" });
+      S.circle(kx(kk), py(belowK / run.N), 5, { fill: C.blue });
+      S.circle(kx(kk), py(predK), 5, { fill: C.yellow });
+      S.text(kx(kk) + 8, Y1 - 10, "k = " + kk + ": measured " + fmt(belowK / run.N, 3) + ", predicted " + fmt(predK, 3), { size: 12, fill: C.orange });
+      S.text(X1, Y0 + 30, "blue = simulation   ·   yellow = 1 − m²t / k²(t + m₀)", { size: 13, fill: C.ink, anchor: "end" });
+      S.text(X1, 425, "slope of the density: d/dk of the yellow curve = 2m²t / (t + m₀) · k⁻³  →  γ = 3", { size: 13, fill: C.yellow, anchor: "end", opacity: during(p, 0.7, 1) });
+    }
+  }
+}
+
+/* ============================ EDIT ABOVE ============================ */
+
+
+// ---------------------------------------------------------------- palette & math utils
+const C = { bg: "#000000", ink: "#ece8df", dim: "#9aa1a9", line: "#2a2f37", blue: "#58c4dd",
+  yellow: "#f4d35e", green: "#83c167", red: "#fc6255", purple: "#c59bd8", orange: "#ff9f43", teal: "#5cd0b3" };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => { t = clamp(t); return t * t * (3 - 2 * t); };
+// Progress of a sub-animation occupying fraction [a, b] of a step, e.g. during(p, 0.5, 1).
+const during = (p, a, b) => clamp((p - a) / (b - a));
+const fmt = (x, d = 2) => !Number.isFinite(x) ? "∞"
+  : (Math.abs(x) >= 1e4 || (x !== 0 && Math.abs(x) < 1e-3)) ? x.toExponential(1) : x.toFixed(d);
+function mix(a, b, t) {
+  const pa = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16));
+  return "#" + pa.map((v, i) => Math.round(lerp(v, pb[i], clamp(t))).toString(16).padStart(2, "0")).join("");
+}
+
+// ---------------------------------------------------------------- drawing helpers
+// Every helper takes an options object; pass { parent: S.group(...) } to nest.
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("stage");
+function el(tag, attrs, parent) {
+  const node = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] !== null && attrs[k] !== undefined) node.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(node);
+  return node;
+}
+const texCache = new Map();
+function texHTML(src, display) {
+  if (!window.katex) return src.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const key = (display ? "D" : "I") + src;
+  if (!texCache.has(key)) texCache.set(key, katex.renderToString(src, { displayMode: display, throwOnError: false }));
+  return texCache.get(key);
+}
+const S = {
+  group: (o = {}) => el("g", { transform: o.transform, opacity: o.opacity }, o.parent),
+  line: (x1, y1, x2, y2, o = {}) => el("line", { x1, y1, x2, y2, stroke: o.stroke || C.ink, "stroke-width": o.width || 2,
+    opacity: o.opacity, "stroke-dasharray": o.dash, "stroke-linecap": "round" }, o.parent),
+  rect: (x, y, w, h, o = {}) => el("rect", { x, y, width: Math.max(0, w), height: Math.max(0, h), rx: o.rx, fill: o.fill || "none",
+    stroke: o.stroke, "stroke-width": o.width, opacity: o.opacity }, o.parent),
+  circle: (cx, cy, r, o = {}) => el("circle", { cx, cy, r: Math.max(0, r), fill: o.fill || "none", stroke: o.stroke,
+    "stroke-width": o.width, opacity: o.opacity }, o.parent),
+  path: (d, o = {}) => el("path", { d, fill: o.fill || "none", stroke: o.stroke || C.ink, "stroke-width": o.width || 2,
+    opacity: o.opacity, "stroke-dasharray": o.dash, "stroke-linejoin": "round", "stroke-linecap": "round" }, o.parent),
+  // Polyline through [[x, y], …], handy for plotting real functions.
+  polyline: (pts, o = {}) => S.path(pts.map((q, i) => (i ? "L" : "M") + q[0].toFixed(1) + "," + q[1].toFixed(1)).join(""), o),
+  text: (x, y, str, o = {}) => {
+    const t = el("text", { x, y, fill: o.fill || C.ink, "font-size": o.size || 18, "text-anchor": o.anchor || "start",
+      "font-weight": o.weight, opacity: o.opacity }, o.parent);
+    t.textContent = str;
+    return t;
+  },
+  arrow: (x1, y1, x2, y2, o = {}) => {
+    const c = o.stroke || C.ink, hl = o.head || 10, a = Math.atan2(y2 - y1, x2 - x1);
+    const bx = x2 - hl * Math.cos(a), by = y2 - hl * Math.sin(a), s = hl * 0.5;
+    S.line(x1, y1, bx, by, Object.assign({}, o, { stroke: c }));
+    return el("path", { d: `M${x2},${y2}L${bx + s * Math.sin(a)},${by - s * Math.cos(a)}L${bx - s * Math.sin(a)},${by + s * Math.cos(a)}Z`,
+      fill: c, opacity: o.opacity }, o.parent);
+  },
+  // KaTeX inside the SVG. anchor: "start" | "middle" | "end"; y is the vertical center.
+  tex: (x, y, src, o = {}) => {
+    const size = o.size || 20, w = o.width || 360, h = size * 2.6;
+    const left = o.anchor === "middle" ? x - w / 2 : o.anchor === "end" ? x - w : x;
+    const fo = el("foreignObject", { x: left, y: y - h / 2, width: w, height: h, opacity: o.opacity }, o.parent);
+    const div = document.createElement("div");
+    div.style.cssText = `height:${h}px;display:flex;align-items:center;white-space:nowrap;color:${o.fill || C.ink};font-size:${size}px;` +
+      `justify-content:${o.anchor === "middle" ? "center" : o.anchor === "end" ? "flex-end" : "flex-start"}`;
+    div.innerHTML = texHTML(src, false);
+    fo.appendChild(div);
+    return fo;
+  },
+  // Matrix as a heatmap: M is an array of rows. Cell opacity ∝ (value - lo) / (hi - lo).
+  matrix: (x, y, M, o = {}) => {
+    const cell = o.cell || 32, flat = M.flat();
+    const lo = o.lo ?? Math.min(...flat), hi = o.hi ?? Math.max(...flat);
+    M.forEach((row, r) => row.forEach((v, c) => {
+      S.rect(x + c * cell, y + r * cell, cell - 2, cell - 2, { fill: o.color || C.blue, rx: 3,
+        opacity: 0.08 + 0.92 * clamp((v - lo) / ((hi - lo) || 1)), parent: o.parent });
+      if (o.values) S.text(x + c * cell + cell / 2 - 1, y + r * cell + cell / 2 + 4, fmt(v, o.digits ?? 2),
+        { size: o.fontSize || 11, anchor: "middle", fill: C.ink, parent: o.parent });
+    }));
+    (o.rowLabels || []).forEach((s, r) => S.text(x - 8, y + r * cell + cell / 2 + 5, s, { size: 13, anchor: "end", fill: C.dim, parent: o.parent }));
+    (o.colLabels || []).forEach((s, c) => S.text(x + c * cell + cell / 2, y - 8, s, { size: 13, anchor: "middle", fill: C.dim, parent: o.parent }));
+  },
+};
+
+// ---------------------------------------------------------------- player
+const $ = id => document.getElementById(id);
+const starts = [];
+let total = 0;
+for (const s of STEPS) { starts.push(total); total += s.duration; }
+const params = {};
+let t = 0, playing = false, last = null, stopAt = null, shownStep = -1;
+
+function locate(time) {
+  for (let k = 0; k < STEPS.length; k++) {
+    if (time <= starts[k] + STEPS[k].duration + 1e-9) return { i: k, raw: clamp((time - starts[k]) / STEPS[k].duration) };
+  }
+  return { i: STEPS.length - 1, raw: 1 };
+}
+
+function setRichText(node, text) {
+  node.innerHTML = text.split("$").map((part, k) => k % 2 ? texHTML(part, false)
+    : part.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))).join("");
+}
+
+function render() {
+  const { i, raw } = locate(t);
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  el("rect", { x: 0, y: 0, width: 800, height: 450, fill: C.bg });
+  try {
+    draw({ S, C, step: i, p: smooth(raw), raw, params, lerp, clamp, smooth, during, fmt, mix });
+  } catch (err) {
+    console.error(err);
+    playing = false;
+    S.text(400, 225, "draw() error: " + err.message, { fill: C.red, anchor: "middle", size: 16 });
+  }
+  if (i !== shownStep) { setRichText($("caption"), STEPS[i].caption); shownStep = i; }
+  $("scrub").value = String(Math.round((t / total) * 1000));
+  $("counter").textContent = `Step ${i + 1} / ${STEPS.length}`;
+  $("play").textContent = playing ? "⏸" : "▶";
+}
+
+function tick(now) {
+  if (playing) {
+    if (last !== null) t = Math.min(total, t + (now - last) / 1000);
+    last = now;
+    const limit = stopAt === null ? total : stopAt;
+    if (t >= limit) { t = limit; playing = false; stopAt = null; last = null; }
+    render();
+  }
+  requestAnimationFrame(tick);
+}
+
+function togglePlay() {
+  if (!playing && t >= total - 1e-6) t = 0;
+  playing = !playing; stopAt = null; last = null;
+  render();
+}
+// Next: play the rest of the current step (or the whole next one) and pause at its end.
+function nextStep() {
+  const { i, raw } = locate(t);
+  const end = starts[i] + STEPS[i].duration;
+  if (raw < 0.999) stopAt = end;
+  else if (i + 1 < STEPS.length) stopAt = end + STEPS[i + 1].duration;
+  else return;
+  playing = true; last = null;
+  render();
+}
+// Prev: jump back to the finished state of the previous step.
+function prevStep() {
+  const { i, raw } = locate(t);
+  t = raw > 0.001 ? starts[i] : (i > 0 ? starts[i - 1] : 0);
+  playing = false; stopAt = null; last = null;
+  render();
+}
+
+function init() {
+  document.title = CONFIG.title + " · researcher-pal";
+  $("title").textContent = CONFIG.title;
+  $("source").textContent = CONFIG.source;
+  if (window.katex) katex.render(CONFIG.equation, $("equation"), { displayMode: true, throwOnError: false });
+  else $("equation").textContent = CONFIG.equation;
+  CONFIG.notes.forEach(n => { const li = document.createElement("li"); setRichText(li, n); $("notes").appendChild(li); });
+
+  PARAMS.forEach(pm => {
+    params[pm.id] = pm.value;
+    const wrap = document.createElement("div");
+    wrap.className = "param";
+    wrap.innerHTML = `<label for="p-${pm.id}"><span></span><output id="o-${pm.id}"></output></label>` +
+      `<input id="p-${pm.id}" type="range" min="${pm.min}" max="${pm.max}" step="${pm.step}" value="${pm.value}"><small></small>`;
+    setRichText(wrap.querySelector("span"), pm.label);
+    wrap.querySelector("small").textContent = pm.help || "";
+    const input = wrap.querySelector("input"), out = wrap.querySelector("output");
+    const update = v => { params[pm.id] = Number(v); out.textContent = String(v); render(); };
+    input.addEventListener("input", () => update(input.value));
+    if (pm.paperValue !== undefined && pm.paperValue !== null) {
+      const reset = document.createElement("button");
+      reset.type = "button";
+      reset.textContent = `reset to paper value (${pm.paperValue})`;
+      reset.addEventListener("click", () => { input.value = pm.paperValue; update(pm.paperValue); });
+      wrap.appendChild(reset);
+    }
+    out.textContent = String(pm.value);
+    $("params").appendChild(wrap);
+  });
+  if (!PARAMS.length) $("params").closest(".card").hidden = true;
+
+  const onClick = (id, fn) => $(id).addEventListener("click", e => { fn(); e.currentTarget.blur(); });
+  onClick("play", togglePlay);
+  onClick("next", nextStep);
+  onClick("prev", prevStep);
+  $("scrub").addEventListener("input", () => {
+    t = (Number($("scrub").value) / 1000) * total; playing = false; stopAt = null; last = null; render();
+  });
+  document.addEventListener("keydown", e => {
+    if (e.target instanceof HTMLInputElement) return;
+    if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); nextStep(); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); prevStep(); }
+  });
+
+  render();
+  requestAnimationFrame(tick);
+}
+// Deferred KaTeX has executed by DOMContentLoaded; if it failed to load, TeX shows as source.
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

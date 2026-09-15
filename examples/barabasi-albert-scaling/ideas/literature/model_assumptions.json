@@ -1,0 +1,297 @@
+{
+  "queries": [
+    "preferential attachment initial conditions network growth",
+    "finite size effects scale-free network degree cutoff",
+    "preferential attachment fixed number of vertices without growth"
+  ],
+  "services": {
+    "arxiv": {
+      "ok": 0,
+      "errors": [
+        "'preferential attachment initial conditions network growth': 429",
+        "'finite size effects scale-free network degree cutoff': 429",
+        "'preferential attachment fixed number of vertices without growth': 429"
+      ]
+    },
+    "semanticscholar": {
+      "ok": 0,
+      "errors": [
+        "'preferential attachment initial conditions network growth': 429",
+        "'finite size effects scale-free network degree cutoff': 429",
+        "'preferential attachment fixed number of vertices without growth': 429"
+      ]
+    },
+    "crossref": {
+      "ok": 3,
+      "errors": []
+    }
+  },
+  "records": [
+    {
+      "title": "Preferential attachment network model with aging and initial attractiveness",
+      "authors": [
+        "Xiao-Long Peng"
+      ],
+      "year": 2022,
+      "ids": {
+        "doi": "10.1088/1572-9494/ac5322"
+      },
+      "url": "https://doi.org/10.1088/1572-9494/ac5322",
+      "abstract": "Abstract\n               In this paper, we generalize the growing network model with preferential attachment for new links to simultaneously include aging and initial attractiveness of nodes. The network evolves with the addition of a new node per unit time, and each new node has m new links that with probability \u03a0\n                     i\n                   are connected to nodes i already present in the network. In our model, the preferential attachment probability \u03a0\n                     i\n                   is proportional not only to k\n                  \n                     i\n                   + A, the sum of the old node i's degree k\n                  \n                     i\n                   and its initial attractiveness A, but also to the aging factor \n                     \n\n\n                     \n                        \n                           \n                              \u03c4\n                           \n                           \n                              i\n                           \n                           \n                              \u2212\n                              \u03b1\n                           \n                        \n                     \n                  \n                  , where \u03c4\n                  \n                     i\n                   is the age of the old node i. That is, \n                     \n\n\n                     \n                        \n                           \n                              \u03a0\n                           \n                           \n                              i\n                           \n                        \n                        \u221d\n                        (\n                        \n                           \n                              k\n                           \n                           \n                              i\n                           \n                        \n                        +\n                        A\n                        )\n                        \n                           \n                              \u03c4\n                           \n                           \n                              i\n                           \n                           \n                              \u2212\n                              \u03b1\n                           \n                        \n                     \n                  \n                  . Based on the continuum approximation, we present a mean-field analysis that predicts the degree dynamics of the network structure. We show that depending on the aging parameter \u03b1 two different network topologies can emerge. For \u03b1 &lt; 1, the network exhibits scaling behavior with a power-law degree distribution P(k) \u221d k\n                  \u2212\u03b3\n                   for large k where the scaling exponent \u03b3 increases with the aging parameter \u03b1 and is linearly correlated with the ratio A/m. Moreover, the average degree k(t\n                  \n                     i\n                  , t) at time t for any node i that is added into the network at time t\n                  \n                     i\n                   scales as \n                     \n\n\n                     \n                        k\n                        (\n                        \n                           \n                              t\n                           \n                           \n                              i\n                           \n                        \n                        ,\n                        t\n                        )\n                        \u221d\n                        \n                           \n                              t\n                           \n                           \n                              i\n                           \n                           \n                              \u2212\n                              \u03b2\n                           \n                        \n                     \n                  \n                   where 1/\u03b2 is a linear function of A/m. For \u03b1 &gt; 1, such scaling behavior disappears and the degree distribution is exponential.",
+      "venue": "Communications in Theoretical Physics",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment initial conditions network growth"
+    },
+    {
+      "title": "Preferential attachment without vertex growth: Emergence of the giant component",
+      "authors": [
+        "Svante Janson",
+        "Lutz Warnke"
+      ],
+      "year": 2021,
+      "ids": {
+        "doi": "10.1214/20-aap1610"
+      },
+      "url": "https://doi.org/10.1214/20-aap1610",
+      "abstract": "",
+      "venue": "The Annals of Applied Probability",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment fixed number of vertices without growth"
+    },
+    {
+      "title": "A Preferential Attachment Paradox: How Preferential Attachment Combines with Growth to Produce Networks with Log-normal In-degree Distributions",
+      "authors": [
+        "Paul Sheridan",
+        "Taku Onodera"
+      ],
+      "year": 2018,
+      "ids": {
+        "doi": "10.1038/s41598-018-21133-2"
+      },
+      "url": "https://doi.org/10.1038/s41598-018-21133-2",
+      "abstract": "Abstract\n                  Every network scientist knows that preferential attachment combines with growth to produce networks with power-law in-degree distributions. How, then, is it possible for the network of American Physical Society journal collection citations to enjoy a log-normal citation distribution when it was found to have grown in accordance with preferential attachment? This anomalous result, which we exalt as the preferential attachment paradox, has remained unexplained since the physicist Sidney Redner first made light of it over a decade ago. Here we propose a resolution. The chief source of the mischief, we contend, lies in Redner having relied on a measurement procedure bereft of the accuracy required to distinguish preferential attachment from another form of attachment that is consistent with a log-normal in-degree distribution. There was a high-accuracy measurement procedure in use at the time, but it would have have been difficult to use it to shed light on the paradox, due to the presence of a systematic error inducing design flaw. In recent years the design flaw had been recognised and corrected. We show that the bringing of the newly corrected measurement procedure to bear on the data leads to a resolution of the paradox.",
+      "venue": "Scientific Reports",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment initial conditions network growth"
+    },
+    {
+      "title": "Mechanisms of complex network growth: Synthesis of the preferential attachment and fitness models",
+      "authors": [
+        "Michael Golosovsky"
+      ],
+      "year": 2018,
+      "ids": {
+        "doi": "10.1103/physreve.97.062310"
+      },
+      "url": "https://doi.org/10.1103/physreve.97.062310",
+      "abstract": "",
+      "venue": "Physical Review E",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment initial conditions network growth"
+    },
+    {
+      "title": "Preferential attachment random graphs with vertices losses",
+      "authors": [
+        "Vladimir N. Zadorozhnyi"
+      ],
+      "year": 2017,
+      "ids": {
+        "doi": "10.1109/sibcon.2017.7998456"
+      },
+      "url": "https://doi.org/10.1109/sibcon.2017.7998456",
+      "abstract": "",
+      "venue": "2017 International Siberian Conference on Control and Communications (SIBCON)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment fixed number of vertices without growth"
+    },
+    {
+      "title": "Preferential attachment with power law growth in the number of new edges",
+      "authors": [
+        "Juan Romero",
+        "Andres Salazar",
+        "Jorge Finke"
+      ],
+      "year": 2017,
+      "ids": {
+        "doi": "10.1109/cdc.2017.8264048"
+      },
+      "url": "https://doi.org/10.1109/cdc.2017.8264048",
+      "abstract": "",
+      "venue": "2017 IEEE 56th Annual Conference on Decision and Control (CDC)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment fixed number of vertices without growth"
+    },
+    {
+      "title": "Network growth with arbitrary initial conditions: Degree dynamics for uniform and preferential attachment",
+      "authors": [
+        "Babak Fotouhi",
+        "Michael G. Rabbat"
+      ],
+      "year": 2013,
+      "ids": {
+        "doi": "10.1103/physreve.88.062801"
+      },
+      "url": "https://doi.org/10.1103/physreve.88.062801",
+      "abstract": "",
+      "venue": "Physical Review E",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment initial conditions network growth"
+    },
+    {
+      "title": "The effect of the initial network configuration on preferential attachment",
+      "authors": [
+        "Yves Berset",
+        "Mat\u00fa\u0161 Medo"
+      ],
+      "year": 2013,
+      "ids": {
+        "doi": "10.1140/epjb/e2013-30998-1"
+      },
+      "url": "https://doi.org/10.1140/epjb/e2013-30998-1",
+      "abstract": "",
+      "venue": "The European Physical Journal B",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment initial conditions network growth"
+    },
+    {
+      "title": "Vertices of high degree in the preferential attachment tree",
+      "authors": [
+        "Graham Brightwell",
+        "Malwina Luczak"
+      ],
+      "year": 2012,
+      "ids": {
+        "doi": "10.1214/ejp.v17-1803"
+      },
+      "url": "https://doi.org/10.1214/ejp.v17-1803",
+      "abstract": "",
+      "venue": "Electronic Journal of Probability",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment fixed number of vertices without growth"
+    },
+    {
+      "title": "Simple rules govern finite-size effects in scale-free networks",
+      "authors": [
+        "S. Cuenda",
+        "J. A. Crespo"
+      ],
+      "year": 2011,
+      "ids": {
+        "doi": "10.1209/0295-5075/95/38002"
+      },
+      "url": "https://doi.org/10.1209/0295-5075/95/38002",
+      "abstract": "",
+      "venue": "EPL (Europhysics Letters)",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "finite size effects scale-free network degree cutoff"
+    },
+    {
+      "title": "Network Structure of Japanese Firms - Scale-Free, Hierarchy, and Degree Correlation: Analysis from 800,000 Firms",
+      "authors": [
+        "Tomohiko Konno"
+      ],
+      "year": 2008,
+      "ids": {
+        "doi": "10.2139/ssrn.1265298"
+      },
+      "url": "https://doi.org/10.2139/ssrn.1265298",
+      "abstract": "We analyze fundamental characteristics of the inter-firm transaction network through the data of 800,000 Japanese firms. We find that there exists a hierarchical structure and a negative degree correlation in this transaction network. We also find that this undirected network is a scale-free network. We bring to light these characteristics of the network and discuss why there is an important need to conduct research work on the actual network structure.",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "finite size effects scale-free network degree cutoff"
+    },
+    {
+      "title": "Finite-Size Scaling and Particle-Size Cutoff Effects in Phase-Separating Polydisperse Fluids",
+      "authors": [
+        "Nigel B. Wilding",
+        "Peter Sollich",
+        "Moreno Fasolo"
+      ],
+      "year": 2005,
+      "ids": {
+        "doi": "10.1103/physrevlett.95.155701"
+      },
+      "url": "https://doi.org/10.1103/physrevlett.95.155701",
+      "abstract": "",
+      "venue": "Physical Review Letters",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "finite size effects scale-free network degree cutoff"
+    },
+    {
+      "title": "Size-dependent degree distribution of a scale-free growing network",
+      "authors": [
+        "S. N. Dorogovtsev",
+        "J. F. F. Mendes",
+        "A. N. Samukhin"
+      ],
+      "year": 2001,
+      "ids": {
+        "doi": "10.1103/physreve.63.062101"
+      },
+      "url": "https://doi.org/10.1103/physreve.63.062101",
+      "abstract": "",
+      "venue": "Physical Review E",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "finite size effects scale-free network degree cutoff"
+    },
+    {
+      "title": "Elimination of Finite-Size Effects on Binding Free Energies via the Warp-Drive Method",
+      "authors": [],
+      "year": null,
+      "ids": {
+        "doi": "10.1021/acs.jctc.8b00280.s001"
+      },
+      "url": "https://doi.org/10.1021/acs.jctc.8b00280.s001",
+      "abstract": "",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "finite size effects scale-free network degree cutoff"
+    },
+    {
+      "title": "Bounds on errors of probability approximation of number of vertices of a fixed degree in a random graph",
+      "authors": [
+        "",
+        "Angkana Suntadkarn"
+      ],
+      "year": null,
+      "ids": {
+        "doi": "10.58837/chula.the.2007.986"
+      },
+      "url": "https://doi.org/10.58837/chula.the.2007.986",
+      "abstract": "We investigate bounds on errors of normal approximation and Poisson approximation of the number of vertices of a fixed degree in a random graph by using Stein-Chen method.",
+      "venue": "",
+      "found_in": [
+        "crossref"
+      ],
+      "query": "preferential attachment fixed number of vertices without growth"
+    }
+  ]
+}

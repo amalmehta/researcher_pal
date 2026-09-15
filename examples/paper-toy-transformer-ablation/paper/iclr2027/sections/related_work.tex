@@ -1,0 +1,10 @@
+\section{Related work}
+\label{sec:related}
+
+The warmup schedule and the $1/\sqrt{d_k}$ scaling were introduced together with the Transformer
+\citep{vaswani2017attention}. \citet{popel2018training} collect practical training tips for Transformer translation
+models, including the choice of learning rate and warmup. \citet{xiong2020layer} study where layer normalization is
+placed and show that the pre-LayerNorm variant can be trained without warmup, whereas the original post-LayerNorm
+design relies on it. \citet{liu2020variance} relate the need for warmup to the high variance of the adaptive learning
+rate of Adam \citep{kingma2015adam} early in training. We keep the original post-LayerNorm design and ask a
+complementary question: how warmup compares with attention scaling when both are ablated together.

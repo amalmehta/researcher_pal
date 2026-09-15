@@ -1,0 +1,21 @@
+note: Running TeX ...
+warning: Trying to include PDF file with version (1.7), which is newer than current output PDF setting (1.5).
+warning: Trying to include PDF file with version (1.7), which is newer than current output PDF setting (1.5).
+warning: sections/results:30: Underfull \vbox (badness 2495) has occurred while \output is active
+warning: sections/conclusion:1: Underfull \vbox (badness 1454) has occurred while \output is active
+note: Running BibTeX on main.aux ...
+note: Rerunning TeX because bibtex was run ...
+warning: Trying to include PDF file with version (1.7), which is newer than current output PDF setting (1.5).
+warning: Trying to include PDF file with version (1.7), which is newer than current output PDF setting (1.5).
+warning: sections/results:30: Underfull \vbox (badness 2495) has occurred while \output is active
+warning: sections/conclusion:1: Underfull \vbox (badness 1454) has occurred while \output is active
+warning: warnings were issued by the TeX engine; use --print and/or --keep-logs for details.
+note: Running xdvipdfmx ...
+warning: Trying to include PDF file with version (1.7), which is newer than current output PDF setting (1.5).
+warning: Trying to include PDF file with version (1.7), which is newer than current output PDF setting (1.5).
+note: Writing `main.out` (614 B)
+note: Writing `main.blg` (199 B)
+note: Writing `main.log` (12.6181640625 KiB)
+note: Writing `main.aux` (5.939453125 KiB)
+note: Writing `main.pdf` (164.376953125 KiB)
+note: Writing `main.bbl` (2.107421875 KiB)

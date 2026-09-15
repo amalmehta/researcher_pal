@@ -1,0 +1,10 @@
+\section{Limitations}
+\label{sec:limitations}
+
+This is a small, synthetic study: one task, one model size, \valSteps{} training steps and \valSeeds{} seeds per
+configuration. We did not vary the key dimension, so our results say nothing about whether attention scaling
+becomes necessary for larger $d_k$, which is where the motivation of \citet{vaswani2017attention} applies most
+strongly. We tested only the post-LayerNorm architecture and a single warmup length, and we did not search over
+learning rates: pre-LayerNorm models are known to train without warmup \citep{xiong2020layer}, and our control tested a single
+learning-rate cap (the warmup peak) with \valSeeds{} seeds and the same training budget. Its mixed outcome suggests
+sensitivity to the seed, and a lower cap or longer training might let more runs without a ramp succeed.

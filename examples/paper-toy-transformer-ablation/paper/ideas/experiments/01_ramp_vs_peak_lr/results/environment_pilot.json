@@ -1,0 +1,11 @@
+{
+  "python": "3.9.1",
+  "torch": "2.2.2",
+  "torch_threads": 8,
+  "steps": 100,
+  "seeds": [
+    0
+  ],
+  "warmup_steps": 200,
+  "d_model": 64
+}

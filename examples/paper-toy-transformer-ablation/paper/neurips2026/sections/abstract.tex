@@ -1,0 +1,10 @@
+The original Transformer relies on two optimization details that are each described in a single sentence: a
+learning-rate warmup and the scaling of attention logits by $1/\sqrt{d_k}$. Both are copied into most
+implementations, yet it is rarely tested which of them a given model needs. We ablate both factors in a controlled
+$2\times 2$ design on a small post-LayerNorm encoder--decoder Transformer trained to reverse digit sequences, with
+\valSeeds{} seeds per configuration. Without warmup, every run fails to learn: exact-match accuracy is
+\valAccNoWarmup\% and the training loss stays near \valPlateauLoss. A control that removes only the ramp, starting at the
+warmup's peak learning rate, solves the task in \valRampSolved{} of \valRampRuns{} seeds, so the failure is not explained by
+the large initial learning rate alone. Removing the attention scaling has no measurable
+effect on the outcome: accuracy is \valAccNoScaling\% without it and \valAccBaseline\% with it. At this scale ($d_k=\valDk$), warmup
+matters and attention scaling does not; whether the scaling matters for larger key dimensions remains untested.

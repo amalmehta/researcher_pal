@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  researcher-pal animation template.
+  Copy to papers/<slug>/animations/<concept-id>.html and edit ONLY the block between
+  "EDIT BELOW" and "EDIT ABOVE" (plus the <title>). The player below it (timeline,
+  controls, scrubbing, keyboard, KaTeX) is shared.
+-->
+<title>Sinusoidal positional encoding · researcher-pal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #0e1013; --panel: #171a1f; --line: #2a2f37; --ink: #ece8df; --dim: #9aa1a9;
+    --blue: #58c4dd; --yellow: #f4d35e; --green: #83c167; --red: #fc6255;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 20px 16px 48px; }
+  header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  header p { margin: 2px 0 0; color: var(--dim); font-size: 13px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; margin-top: 16px; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+  .player { background: #000; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  svg#stage { display: block; width: 100%; height: auto; }
+  svg text { font-family: inherit; font-variant-numeric: tabular-nums; }
+  .caption { min-height: 3.4em; padding: 12px 16px; font-size: 17px; border-top: 1px solid var(--line); background: var(--panel); }
+  .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px;
+    background: var(--panel); border-top: 1px solid var(--line); }
+  .controls button { background: #232830; color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+    padding: 6px 10px; min-width: 42px; font: inherit; cursor: pointer; }
+  .controls button:hover { border-color: var(--blue); }
+  .controls input[type=range] { flex: 1; min-width: 140px; accent-color: var(--blue); }
+  .counter { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 84px; text-align: right; }
+  .keys { color: var(--dim); font-size: 12px; margin: 6px 2px 0; }
+  aside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .card h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .equation { overflow-x: auto; font-size: 15px; }
+  .param { margin-bottom: 14px; }
+  .param:last-child { margin-bottom: 0; }
+  .param label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  .param output { color: var(--yellow); font-variant-numeric: tabular-nums; }
+  .param input { width: 100%; accent-color: var(--yellow); }
+  .param small { display: block; color: var(--dim); }
+  .param button { background: none; border: 0; padding: 0; color: var(--blue); font: inherit; font-size: 12px; cursor: pointer; }
+  ul.notes { margin: 0; padding-left: 18px; color: var(--dim); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="title"></h1>
+    <p id="source"></p>
+  </header>
+  <div class="card" style="margin-top:14px"><div class="equation" id="equation"></div></div>
+  <div class="layout">
+    <section>
+      <div class="player">
+        <svg id="stage" viewBox="0 0 800 450" role="img"></svg>
+        <div class="caption" id="caption" aria-live="polite"></div>
+        <div class="controls">
+          <button id="prev" title="Previous step (←)" aria-label="Previous step">⏮</button>
+          <button id="play" title="Play / pause (space)" aria-label="Play or pause">▶</button>
+          <button id="next" title="Play next step (→)" aria-label="Next step">⏭</button>
+          <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Timeline">
+          <span class="counter" id="counter"></span>
+        </div>
+      </div>
+      <p class="keys">Space: play/pause · ← →: step · drag the timeline to scrub</p>
+    </section>
+    <aside>
+      <div class="card"><h2>Parameters</h2><div id="params"></div></div>
+      <div class="card"><h2>What to notice</h2><ul class="notes" id="notes"></ul></div>
+    </aside>
+  </div>
+</main>
+
+<script>
+/* ============================ EDIT BELOW ============================ */
+
+const CONFIG = {
+  title: "Sinusoidal positional encoding",
+  source: "Attention Is All You Need · §3.5",
+  equation: String.raw`PE_{(pos,\,2i)} = \sin\!\left(\frac{pos}{10000^{2i/d_{model}}}\right),\quad PE_{(pos,\,2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d_{model}}}\right)`,
+  notes: [
+    "Encodings are added to the token embeddings, not concatenated.",
+    "The rotation picture is our derivation from $\\sin(a+b)$ and $\\cos(a+b)$; the paper only states that $PE_{pos+k}$ is a linear function of $PE_{pos}$.",
+    "The paper interleaves sin and cos (even and odd dimensions); tensor2tensor concatenates them.",
+  ],
+};
+
+const PARAMS = [
+  { id: "pos", label: "Position pos", min: 0, max: 99, step: 1, value: 10, help: "Which token position to inspect." },
+  { id: "k", label: "Offset k", min: 1, max: 40, step: 1, value: 5, help: "Distance to a second position, pos + k." },
+  { id: "logd", label: "log₂ d_model", min: 4, max: 9, step: 1, value: 9, paperValue: 9, help: "d_model = 2^value. The paper uses 512 (value 9)." },
+];
+
+const STEPS = [
+  { caption: "Each pair of dimensions $(2i, 2i{+}1)$ is a sine and cosine wave across positions. Small $i$ oscillates fast; large $i$ slowly, up to wavelength $10000 \\cdot 2\\pi$.", duration: 4.5 },
+  { caption: "Stack the waves side by side, one row per position and one column per dimension. This fixed table is added to the token embeddings.", duration: 3 },
+  { caption: "One position's row is its fingerprint. Neighbors agree on the slow dimensions and differ on the fast ones. Drag pos.", duration: 3.5 },
+  { caption: "Moving $k$ positions rotates every (sin, cos) pair by the angle $k\\,\\omega_i$. The angle depends on $k$, not on pos, so relative offsets are easy to learn (§3.5).", duration: 4.5 },
+  { caption: "So the similarity $PE_{pos} \\cdot PE_{pos+k}$ depends only on the offset $k$, and it falls off with distance. Change pos: the curve doesn't move.", duration: 4 },
+];
+
+const PE_CACHE = {};
+function omega(i, d) { return 1 / Math.pow(10000, (2 * i) / d); }
+function peValue(pos, dim, d) {
+  const w = omega(Math.floor(dim / 2), d);
+  return dim % 2 === 0 ? Math.sin(pos * w) : Math.cos(pos * w);
+}
+// Heatmap of the first min(d, 128) dimensions for positions 0..99, as a cached PNG data URL.
+function peImage(d) {
+  if (PE_CACHE[d]) return PE_CACHE[d];
+  const cols = Math.min(d, 128), rows = 100;
+  const canvas = document.createElement("canvas");
+  canvas.width = cols; canvas.height = rows;
+  const ctx = canvas.getContext("2d");
+  const img = ctx.createImageData(cols, rows);
+  for (let pos = 0; pos < rows; pos++) {
+    for (let c = 0; c < cols; c++) {
+      const v = peValue(pos, c, d), a = Math.abs(v), rgb = v >= 0 ? [88, 196, 221] : [252, 98, 85];
+      const idx = (pos * cols + c) * 4;
+      img.data[idx] = rgb[0] * a; img.data[idx + 1] = rgb[1] * a; img.data[idx + 2] = rgb[2] * a; img.data[idx + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return (PE_CACHE[d] = canvas.toDataURL());
+}
+
+function draw({ S, C, step, p, params, during, fmt }) {
+  const d = 2 ** params.logd, pos = params.pos, k = params.k;
+  const fade = during(p, 0, 0.25);
+
+  // ---- Step 0: individual waves
+  if (step === 0) {
+    const picks = [0, d / 16, d / 8, d / 4].map(Math.floor);
+    const colors = [C.blue, C.green, C.purple, C.orange];
+    const x0 = 100, x1 = 740, px = t => x0 + (t / 99) * (x1 - x0);
+    S.line(px(pos), 70, px(pos), 405, { stroke: C.yellow, width: 1.5, dash: "4 4" });
+    S.text(px(pos), 62, "pos = " + pos, { size: 13, fill: C.yellow, anchor: "middle" });
+    picks.forEach((i, r) => {
+      const cy = 110 + r * 85, amp = 30, w = omega(i, d), lambda = (2 * Math.PI) / w;
+      const reveal = during(p, 0.05 + r * 0.15, 0.4 + r * 0.15);
+      S.line(x0, cy, x1, cy, { stroke: C.line, width: 1 });
+      const pts = [];
+      for (let t = 0; t <= 99 * reveal; t += 0.5) pts.push([px(t), cy - amp * Math.sin(t * w)]);
+      if (pts.length > 1) S.polyline(pts, { stroke: colors[r], width: 2.5 });
+      S.text(x0 - 12, cy - 3, "i = " + i, { size: 13, fill: colors[r], anchor: "end" });
+      S.text(x0 - 12, cy + 14, "λ ≈ " + (lambda < 10000 ? lambda.toFixed(0) : lambda.toExponential(1)), { size: 11, fill: C.dim, anchor: "end" });
+      if (99 * reveal >= pos) S.circle(px(pos), cy - amp * Math.sin(pos * w), 5, { fill: C.yellow });
+    });
+    S.text((x0 + x1) / 2, 432, "position → (sine dimension 2i shown for four values of i, d_model = " + d + ")", { size: 13, fill: C.dim, anchor: "middle" });
+  }
+
+  // ---- Steps 1–2: the whole table, then one row
+  if (step === 1 || step === 2) {
+    const cols = Math.min(d, 128), hx = 60, hy = 80, hw = 400, hh = 320;
+    const g = S.group({ opacity: step === 1 ? fade : 1 });
+    el("image", { href: peImage(d), x: hx, y: hy, width: hw, height: hh, preserveAspectRatio: "none", style: "image-rendering: pixelated" }, g);
+    S.text(hx, hy - 12, "PE table: 100 positions × " + (cols === d ? "all " + d : "first " + cols + " of " + d) + " dimensions", { size: 13, fill: C.dim, parent: g });
+    S.text(hx + hw / 2, hy + hh + 20, "dimension →", { size: 12, fill: C.dim, anchor: "middle", parent: g });
+    S.text(hx - 8, hy + 10, "0", { size: 11, fill: C.dim, anchor: "end", parent: g });
+    S.text(hx - 8, hy + hh, "99", { size: 11, fill: C.dim, anchor: "end", parent: g });
+    S.text(hx - 8, hy + hh / 2, "pos", { size: 11, fill: C.dim, anchor: "end", parent: g });
+    if (step === 2) {
+      S.rect(hx - 2, hy + (pos / 100) * hh - 1, hw + 4, hh / 100 + 2, { stroke: C.yellow, width: 2 });
+      const pairs = Array.from({ length: 8 }, (_, j) => Math.floor((j * d) / 16));
+      const bx = 510, by = 240, bw = 15, grow = during(p, 0, 0.6);
+      S.text(bx, 92, "PE[" + pos + "]: 8 (sin, cos) pairs across the dimensions", { size: 14, fill: C.yellow });
+      S.line(bx, by, bx + 16 * bw, by, { stroke: C.dim, width: 1 });
+      pairs.forEach((i, j) => {
+        [2 * i, 2 * i + 1].forEach((dim, s) => {
+          const v = peValue(pos, dim, d) * grow;
+          S.rect(bx + (2 * j + s) * bw + 1, v >= 0 ? by - v * 110 : by, bw - 2, Math.abs(v) * 110, { fill: v >= 0 ? C.blue : C.red, opacity: s === 0 ? 0.95 : 0.6 });
+        });
+        S.text(bx + (2 * j + 1) * bw, by + 128, String(i), { size: 10, fill: C.dim, anchor: "middle" });
+      });
+      S.text(bx, by + 150, "i →  (solid = sin, faded = cos)", { size: 12, fill: C.dim });
+      S.text(bx, by + 175, "Small i changes every step; large i barely moves.", { size: 13, fill: C.ink });
+    }
+  }
+
+  // ---- Step 3: an offset is a rotation of each (sin, cos) pair
+  if (step === 3) {
+    const picks = [0, Math.floor(d / 32), Math.floor(d / 16)];
+    picks.forEach((i, c) => {
+      const cx = 150 + c * 250, cy = 215, r = 85, w = omega(i, d);
+      const g = S.group({ opacity: fade });
+      const P = ang => [cx + r * Math.sin(ang), cy - r * Math.cos(ang)];
+      const a1 = pos * w, a2 = (pos + k) * w, sweep = during(p, 0.25, 0.9);
+      S.circle(cx, cy, r, { stroke: C.line, width: 1.5, parent: g });
+      S.text(cx + r + 6, cy + 4, "sin", { size: 11, fill: C.dim, parent: g });
+      S.text(cx + 4, cy - r - 4, "cos", { size: 11, fill: C.dim, parent: g });
+      const samples = Math.max(40, Math.ceil(Math.abs(a2 - a1) * 12));
+      const arc = [];
+      for (let s = 0; s <= samples; s++) arc.push(P(a1 + (a2 - a1) * sweep * (s / samples)));
+      if (sweep > 0) S.polyline(arc, { stroke: C.orange, width: 3, parent: g });
+      const [xa, ya] = P(a1), [xb, yb] = P(a1 + (a2 - a1) * sweep);
+      S.line(cx, cy, xa, ya, { stroke: C.yellow, width: 2, parent: g });
+      S.circle(xa, ya, 6, { fill: C.yellow, parent: g });
+      if (sweep > 0) { S.line(cx, cy, xb, yb, { stroke: C.orange, width: 2, parent: g }); S.circle(xb, yb, 6, { fill: C.orange, parent: g }); }
+      S.text(cx, cy - r - 24, "pair i = " + i, { size: 14, anchor: "middle", parent: g });
+      S.text(cx, cy + r + 28, "rotation k·ω = " + ((k * w) % (2 * Math.PI)).toFixed(2) + " rad", { size: 13, fill: C.orange, anchor: "middle", parent: g });
+    });
+    S.text(400, 395, "yellow = (sin, cos) at pos = " + pos + "   ·   orange = at pos + k = " + (pos + k), { size: 13, fill: C.dim, anchor: "middle" });
+    S.text(400, 420, "Change pos: both points move, but the rotation angle stays the same.", { size: 13, fill: C.ink, anchor: "middle" });
+  }
+
+  // ---- Step 4: similarity depends only on the offset
+  if (step === 4) {
+    const g = S.group({ opacity: fade });
+    const X0 = 90, X1 = 740, Y0 = 95, Y1 = 345;
+    const sim = (a, b) => { let s = 0; for (let c = 0; c < d; c++) s += peValue(a, c, d) * peValue(b, c, d); return s / (d / 2); };
+    const ks = Array.from({ length: 101 }, (_, j) => j - 50);
+    const vals = ks.map(kk => sim(pos, pos + kk));
+    const lo = Math.min(0, ...vals), hi = 1;
+    const kx = kk => X0 + ((kk + 50) / 100) * (X1 - X0), vy = v => Y1 - ((v - lo) / (hi - lo)) * (Y1 - Y0);
+    S.text(X0, 70, "similarity PE[pos] · PE[pos + k], normalized so k = 0 gives 1", { size: 14, fill: C.dim, parent: g });
+    S.line(X0, vy(0), X1, vy(0), { stroke: C.line, width: 1, parent: g });
+    const count = Math.max(2, Math.round(during(p, 0.1, 0.8) * 101));
+    S.polyline(vals.slice(0, count).map((v, j) => [kx(ks[j]), vy(v)]), { stroke: C.blue, width: 3, parent: g });
+    const vk = sim(pos, pos + k);
+    S.circle(kx(k), vy(vk), 6, { fill: C.orange, parent: g });
+    S.text(kx(k) + 10, vy(vk) - 10, "k = " + k + ": " + fmt(vk), { size: 13, fill: C.orange, parent: g });
+    [-50, -25, 0, 25, 50].forEach(t => S.text(kx(t), Y1 + 22, String(t), { size: 12, fill: C.dim, anchor: "middle", parent: g }));
+    S.text((X0 + X1) / 2, Y1 + 44, "offset k", { size: 13, fill: C.dim, anchor: "middle", parent: g });
+    const other = (pos + 37) % 100;
+    S.text(X1, 425, "check: at pos = " + other + ", k = " + k + " gives " + fmt(sim(other, other + k)), { size: 13, fill: C.ink, anchor: "end", parent: g, opacity: during(p, 0.7, 1) });
+  }
+}
+
+/* ============================ EDIT ABOVE ============================ */
+
+
+// ---------------------------------------------------------------- palette & math utils
+const C = { bg: "#000000", ink: "#ece8df", dim: "#9aa1a9", line: "#2a2f37", blue: "#58c4dd",
+  yellow: "#f4d35e", green: "#83c167", red: "#fc6255", purple: "#c59bd8", orange: "#ff9f43", teal: "#5cd0b3" };
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => { t = clamp(t); return t * t * (3 - 2 * t); };
+// Progress of a sub-animation occupying fraction [a, b] of a step, e.g. during(p, 0.5, 1).
+const during = (p, a, b) => clamp((p - a) / (b - a));
+const fmt = (x, d = 2) => !Number.isFinite(x) ? "∞"
+  : (Math.abs(x) >= 1e4 || (x !== 0 && Math.abs(x) < 1e-3)) ? x.toExponential(1) : x.toFixed(d);
+function mix(a, b, t) {
+  const pa = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16));
+  return "#" + pa.map((v, i) => Math.round(lerp(v, pb[i], clamp(t))).toString(16).padStart(2, "0")).join("");
+}
+
+// ---------------------------------------------------------------- drawing helpers
+// Every helper takes an options object; pass { parent: S.group(...) } to nest.
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("stage");
+function el(tag, attrs, parent) {
+  const node = document.createElementNS(NS, tag);
+  for (const k in attrs) if (attrs[k] !== null && attrs[k] !== undefined) node.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(node);
+  return node;
+}
+const texCache = new Map();
+function texHTML(src, display) {
+  if (!window.katex) return src.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const key = (display ? "D" : "I") + src;
+  if (!texCache.has(key)) texCache.set(key, katex.renderToString(src, { displayMode: display, throwOnError: false }));
+  return texCache.get(key);
+}
+const S = {
+  group: (o = {}) => el("g", { transform: o.transform, opacity: o.opacity }, o.parent),
+  line: (x1, y1, x2, y2, o = {}) => el("line", { x1, y1, x2, y2, stroke: o.stroke || C.ink, "stroke-width": o.width || 2,
+    opacity: o.opacity, "stroke-dasharray": o.dash, "stroke-linecap": "round" }, o.parent),
+  rect: (x, y, w, h, o = {}) => el("rect", { x, y, width: Math.max(0, w), height: Math.max(0, h), rx: o.rx, fill: o.fill || "none",
+    stroke: o.stroke, "stroke-width": o.width, opacity: o.opacity }, o.parent),
+  circle: (cx, cy, r, o = {}) => el("circle", { cx, cy, r: Math.max(0, r), fill: o.fill || "none", stroke: o.stroke,
+    "stroke-width": o.width, opacity: o.opacity }, o.parent),
+  path: (d, o = {}) => el("path", { d, fill: o.fill || "none", stroke: o.stroke || C.ink, "stroke-width": o.width || 2,
+    opacity: o.opacity, "stroke-dasharray": o.dash, "stroke-linejoin": "round", "stroke-linecap": "round" }, o.parent),
+  // Polyline through [[x, y], …], handy for plotting real functions.
+  polyline: (pts, o = {}) => S.path(pts.map((q, i) => (i ? "L" : "M") + q[0].toFixed(1) + "," + q[1].toFixed(1)).join(""), o),
+  text: (x, y, str, o = {}) => {
+    const t = el("text", { x, y, fill: o.fill || C.ink, "font-size": o.size || 18, "text-anchor": o.anchor || "start",
+      "font-weight": o.weight, opacity: o.opacity }, o.parent);
+    t.textContent = str;
+    return t;
+  },
+  arrow: (x1, y1, x2, y2, o = {}) => {
+    const c = o.stroke || C.ink, hl = o.head || 10, a = Math.atan2(y2 - y1, x2 - x1);
+    const bx = x2 - hl * Math.cos(a), by = y2 - hl * Math.sin(a), s = hl * 0.5;
+    S.line(x1, y1, bx, by, Object.assign({}, o, { stroke: c }));
+    return el("path", { d: `M${x2},${y2}L${bx + s * Math.sin(a)},${by - s * Math.cos(a)}L${bx - s * Math.sin(a)},${by + s * Math.cos(a)}Z`,
+      fill: c, opacity: o.opacity }, o.parent);
+  },
+  // KaTeX inside the SVG. anchor: "start" | "middle" | "end"; y is the vertical center.
+  tex: (x, y, src, o = {}) => {
+    const size = o.size || 20, w = o.width || 360, h = size * 2.6;
+    const left = o.anchor === "middle" ? x - w / 2 : o.anchor === "end" ? x - w : x;
+    const fo = el("foreignObject", { x: left, y: y - h / 2, width: w, height: h, opacity: o.opacity }, o.parent);
+    const div = document.createElement("div");
+    div.style.cssText = `height:${h}px;display:flex;align-items:center;white-space:nowrap;color:${o.fill || C.ink};font-size:${size}px;` +
+      `justify-content:${o.anchor === "middle" ? "center" : o.anchor === "end" ? "flex-end" : "flex-start"}`;
+    div.innerHTML = texHTML(src, false);
+    fo.appendChild(div);
+    return fo;
+  },
+  // Matrix as a heatmap: M is an array of rows. Cell opacity ∝ (value - lo) / (hi - lo).
+  matrix: (x, y, M, o = {}) => {
+    const cell = o.cell || 32, flat = M.flat();
+    const lo = o.lo ?? Math.min(...flat), hi = o.hi ?? Math.max(...flat);
+    M.forEach((row, r) => row.forEach((v, c) => {
+      S.rect(x + c * cell, y + r * cell, cell - 2, cell - 2, { fill: o.color || C.blue, rx: 3,
+        opacity: 0.08 + 0.92 * clamp((v - lo) / ((hi - lo) || 1)), parent: o.parent });
+      if (o.values) S.text(x + c * cell + cell / 2 - 1, y + r * cell + cell / 2 + 4, fmt(v, o.digits ?? 2),
+        { size: o.fontSize || 11, anchor: "middle", fill: C.ink, parent: o.parent });
+    }));
+    (o.rowLabels || []).forEach((s, r) => S.text(x - 8, y + r * cell + cell / 2 + 5, s, { size: 13, anchor: "end", fill: C.dim, parent: o.parent }));
+    (o.colLabels || []).forEach((s, c) => S.text(x + c * cell + cell / 2, y - 8, s, { size: 13, anchor: "middle", fill: C.dim, parent: o.parent }));
+  },
+};
+
+// ---------------------------------------------------------------- player
+const $ = id => document.getElementById(id);
+const starts = [];
+let total = 0;
+for (const s of STEPS) { starts.push(total); total += s.duration; }
+const params = {};
+let t = 0, playing = false, last = null, stopAt = null, shownStep = -1;
+
+function locate(time) {
+  for (let k = 0; k < STEPS.length; k++) {
+    if (time <= starts[k] + STEPS[k].duration + 1e-9) return { i: k, raw: clamp((time - starts[k]) / STEPS[k].duration) };
+  }
+  return { i: STEPS.length - 1, raw: 1 };
+}
+
+function setRichText(node, text) {
+  node.innerHTML = text.split("$").map((part, k) => k % 2 ? texHTML(part, false)
+    : part.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))).join("");
+}
+
+function render() {
+  const { i, raw } = locate(t);
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  el("rect", { x: 0, y: 0, width: 800, height: 450, fill: C.bg });
+  try {
+    draw({ S, C, step: i, p: smooth(raw), raw, params, lerp, clamp, smooth, during, fmt, mix });
+  } catch (err) {
+    console.error(err);
+    playing = false;
+    S.text(400, 225, "draw() error: " + err.message, { fill: C.red, anchor: "middle", size: 16 });
+  }
+  if (i !== shownStep) { setRichText($("caption"), STEPS[i].caption); shownStep = i; }
+  $("scrub").value = String(Math.round((t / total) * 1000));
+  $("counter").textContent = `Step ${i + 1} / ${STEPS.length}`;
+  $("play").textContent = playing ? "⏸" : "▶";
+}
+
+function tick(now) {
+  if (playing) {
+    if (last !== null) t = Math.min(total, t + (now - last) / 1000);
+    last = now;
+    const limit = stopAt === null ? total : stopAt;
+    if (t >= limit) { t = limit; playing = false; stopAt = null; last = null; }
+    render();
+  }
+  requestAnimationFrame(tick);
+}
+
+function togglePlay() {
+  if (!playing && t >= total - 1e-6) t = 0;
+  playing = !playing; stopAt = null; last = null;
+  render();
+}
+// Next: play the rest of the current step (or the whole next one) and pause at its end.
+function nextStep() {
+  const { i, raw } = locate(t);
+  const end = starts[i] + STEPS[i].duration;
+  if (raw < 0.999) stopAt = end;
+  else if (i + 1 < STEPS.length) stopAt = end + STEPS[i + 1].duration;
+  else return;
+  playing = true; last = null;
+  render();
+}
+// Prev: jump back to the finished state of the previous step.
+function prevStep() {
+  const { i, raw } = locate(t);
+  t = raw > 0.001 ? starts[i] : (i > 0 ? starts[i - 1] : 0);
+  playing = false; stopAt = null; last = null;
+  render();
+}
+
+function init() {
+  document.title = CONFIG.title + " · researcher-pal";
+  $("title").textContent = CONFIG.title;
+  $("source").textContent = CONFIG.source;
+  if (window.katex) katex.render(CONFIG.equation, $("equation"), { displayMode: true, throwOnError: false });
+  else $("equation").textContent = CONFIG.equation;
+  CONFIG.notes.forEach(n => { const li = document.createElement("li"); setRichText(li, n); $("notes").appendChild(li); });
+
+  PARAMS.forEach(pm => {
+    params[pm.id] = pm.value;
+    const wrap = document.createElement("div");
+    wrap.className = "param";
+    wrap.innerHTML = `<label for="p-${pm.id}"><span></span><output id="o-${pm.id}"></output></label>` +
+      `<input id="p-${pm.id}" type="range" min="${pm.min}" max="${pm.max}" step="${pm.step}" value="${pm.value}"><small></small>`;
+    setRichText(wrap.querySelector("span"), pm.label);
+    wrap.querySelector("small").textContent = pm.help || "";
+    const input = wrap.querySelector("input"), out = wrap.querySelector("output");
+    const update = v => { params[pm.id] = Number(v); out.textContent = String(v); render(); };
+    input.addEventListener("input", () => update(input.value));
+    if (pm.paperValue !== undefined && pm.paperValue !== null) {
+      const reset = document.createElement("button");
+      reset.type = "button";
+      reset.textContent = `reset to paper value (${pm.paperValue})`;
+      reset.addEventListener("click", () => { input.value = pm.paperValue; update(pm.paperValue); });
+      wrap.appendChild(reset);
+    }
+    out.textContent = String(pm.value);
+    $("params").appendChild(wrap);
+  });
+  if (!PARAMS.length) $("params").closest(".card").hidden = true;
+
+  const onClick = (id, fn) => $(id).addEventListener("click", e => { fn(); e.currentTarget.blur(); });
+  onClick("play", togglePlay);
+  onClick("next", nextStep);
+  onClick("prev", prevStep);
+  $("scrub").addEventListener("input", () => {
+    t = (Number($("scrub").value) / 1000) * total; playing = false; stopAt = null; last = null; render();
+  });
+  document.addEventListener("keydown", e => {
+    if (e.target instanceof HTMLInputElement) return;
+    if (e.code === "Space") { e.preventDefault(); togglePlay(); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); nextStep(); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); prevStep(); }
+  });
+
+  render();
+  requestAnimationFrame(tick);
+}
+// Deferred KaTeX has executed by DOMContentLoaded; if it failed to load, TeX shows as source.
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

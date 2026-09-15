@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+In a controlled $2\times 2$ ablation on a small post-LayerNorm Transformer, no run learned sequence reversal
+without learning-rate warmup, and removing only the ramp left \valRampUnsolved{} of \valRampRuns{} seeds unsolved, while removing the $1/\sqrt{d_k}$ attention scaling had no measurable effect on the
+outcome. In settings
+like ours, dropping warmup is the change to avoid; testing whether attention scaling matters at larger key
+dimensions is the natural next step.
