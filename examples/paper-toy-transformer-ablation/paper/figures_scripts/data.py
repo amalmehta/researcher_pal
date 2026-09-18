@@ -1,16 +1,32 @@
 """Load the researcher's results. Every number in the paper passes through here."""
 import csv
 import json
+import os
 import re
 from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-VENUE_DIR = HERE.parents[1]
-INPUTS = HERE.parents[3] / "inputs"
+PAPER_DIR = HERE.parent
+
+
+def _venue_dir():
+    """Which venue these figures are built for: $VENUE_DIR (set by make_all.py), or the only one there is."""
+    if os.environ.get("VENUE_DIR"):
+        return Path(os.environ["VENUE_DIR"]).resolve()
+    venues = sorted(p.parent for p in PAPER_DIR.glob("*/main.tex"))
+    if len(venues) != 1:
+        raise SystemExit("this paper has %d venue folders; run 'python3 make_all.py <venue folder>' or set VENUE_DIR"
+                         % len(venues))
+    return venues[0]
+
+
+VENUE_DIR = _venue_dir()
+VENUE = os.environ.get("VENUE") or re.sub(r"\d+$", "", VENUE_DIR.name)
+INPUTS = PAPER_DIR.parent / "inputs"
 RESULTS = INPUTS / "results"
 # Approved improvement experiment I-01 (paper-ideas); read only if its results exist.
-RAMP = VENUE_DIR.parent / "ideas" / "experiments" / "01_ramp_vs_peak_lr" / "results"
+RAMP = PAPER_DIR / "ideas" / "experiments" / "01_ramp_vs_peak_lr" / "results"
 
 # (config id in the CSV, label in the paper)
 CONFIGS = [

@@ -34,7 +34,11 @@ Three [Claude Code](https://claude.com/claude-code) skills for working with rese
 | `examples/paper-toy-transformer-ablation/` | A short example paper built for NeurIPS and ICLR, plus improvement ideas and an experiment |
 | `examples/knowledge_graph.md` | Topics learned across both papers |
 | `site/` | A static site for browsing the examples |
+| `tests/`, `tools/` | Unit tests for the skills' scripts, and the check runner |
+| `evals/` | How the learning skill is evaluated against papers it has never seen |
 | `researcher_pal.md` | The full spec and changelog |
+
+MIT licensed (see `LICENSE`). The papers' own text belongs to their authors.
 
 The example papers' PDFs aren't included. Download them from arXiv:
 [1706.03762](https://arxiv.org/abs/1706.03762) and [cond-mat/9910332](https://arxiv.org/abs/cond-mat/9910332).
@@ -46,6 +50,19 @@ python3.9 site/build_site.py
 ```
 
 Then run `python3 -m http.server 8765` and open http://localhost:8765/site/dist/index.html.
+
+## Checks
+
+Everything the repo can verify runs from one script (CI runs the same one):
+
+```bash
+tools/checks.sh
+```
+
+It runs the unit tests for the skills' scripts, checks both example idea reports, builds the site, runs the
+exercise tests (the stubs must fail and the reference solutions must pass), compiles both example papers and
+re-runs every figure and value script to confirm the papers still match their data. `tools/checks.sh --quick`
+skips the paper compile and the PyTorch exercises.
 
 ## Good to know
 

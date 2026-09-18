@@ -1,6 +1,6 @@
 """Matplotlib styling for paper figures: exact venue sizes, readable fonts, colorblind-safe colors.
 
-Copy next to the figure scripts (paper/<slug>/<venue>/figures/scripts/figure_style.py) and use:
+Copy next to the figure scripts (paper/<slug>/figures_scripts/figure_style.py) and use:
 
     import figure_style as fs
     fig, ax = fs.figure("iclr", width="column", aspect=0.6)

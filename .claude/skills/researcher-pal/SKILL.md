@@ -21,7 +21,8 @@ papers/<slug>/
 ├── paper.pdf
 ├── paper.txt                      # extracted text, only if needed (step 2)
 ├── concept_graph.md
-├── animations/<concept-id>.html
+├── animations/<concept-id>.html   # one per animated concept
+├── animations/_player.js, _player.css   # the shared player, copied once per paper
 ├── exercises/
 │   ├── pytest.ini  conftest.py  _load.py                   # shared harness, if any exercise is coded
 │   ├── NN_<concept-id>/  README.md  impl.py  test_impl.py  # coded exercise
@@ -142,8 +143,11 @@ can't** (1–2 for a short paper):
 
 Skip concepts that are just definitions.
 
-For each one, copy `assets/animation_template.html` to
-`papers/<slug>/animations/<concept-id>.html` and edit only the `EDIT BELOW … EDIT
+Copy `assets/animation_player.js` to `papers/<slug>/animations/_player.js` and
+`assets/animation_player.css` to `_player.css` once per paper: they hold the page skeleton, timeline,
+controls and drawing helpers that every animation shares, so a fix there fixes all of them.
+For each animation, copy `assets/animation_template.html` to
+`papers/<slug>/animations/<concept-id>.html` and edit only the `THIS ANIMATION` block (`EDIT
 ABOVE` block. The player (timeline, controls, keyboard, KaTeX) is shared. The template's
 softmax demo shows the whole API.
 

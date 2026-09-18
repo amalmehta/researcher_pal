@@ -16,6 +16,8 @@ reputation.
 ```
 paper/<slug>/
 ├── intake.md                         # P1: claims ↔ evidence, missing pieces (confirmed by the researcher)
+├── figures_scripts/*.py              # one script per figure/table/values file, shared by every venue,
+│                                     #   plus figure_style.py and make_all.py
 └── <venue>/                          # one folder per target venue, e.g. iclr2027/
     ├── venue.md                      # P2: this cycle's rules, verified against the live CFP
     ├── outline.md                    # P3: page budget + figure/table plan (approved by the researcher)
@@ -25,7 +27,6 @@ paper/<slug>/
     ├── generated/values.tex          # \newcommand{\valName}{...}, written by scripts (P4)
     ├── generated/tables/*.tex        # tables written by scripts (P4)
     ├── figures/*.pdf                 # figures (P4)
-    ├── figures/scripts/*.py          # one script per figure/table/values file, plus figure_style.py
     ├── figures/src/*.svg | *.dot     # editable sources for concept illustrations and diagrams
     ├── refs.bib, citations_verification.md
     ├── sources.md                    # every number/macro → data file, column, filter, script
@@ -37,7 +38,7 @@ paper/<slug>/
 - **Never invent** results, numbers, experimental details, quotes, citations or author information.
   Use `\TODO{}` (define it as a red `\textbf` macro in `main.tex`) and list open items for the researcher.
 - **Numbers come from data.** In-text results use `\val...` macros written by
-  `figures/scripts/make_values.py`. Tables are written by scripts. Every macro and every hand-typed
+  `figures_scripts/make_values.py`. Tables are written by scripts. Every macro and every hand-typed
   setting (e.g. "batch size 64") gets a row in `sources.md`: value, meaning, file, and how it was
   computed. `scripts/check_paper.py` enforces this.
 - **Tools.** LaTeX: `tectonic` (on PATH or `~/.local/bin/tectonic`). If it's missing, ask before
@@ -112,10 +113,12 @@ Write `<venue>/outline.md` using `references/writing_guide.md`:
 
 ## P4: Figures, tables and values
 
-- Copy `assets/figure_style.py` into `figures/scripts/`. If you measured widths for a venue not in the
+- Copy `assets/figure_style.py` into `figures_scripts/`. If you measured widths for a venue not in the
   helper, register them with `register_venue()`. One script per output, named after it
-  (`figures/scripts/loss_curves.py` → `figures/loss_curves.pdf`), reading data straight from the
-  researcher's files. Include figures in LaTeX at the exact width they were made for
+  (`figures_scripts/loss_curves.py` → `<venue>/figures/loss_curves.pdf`), reading data straight from the
+  researcher's files. **The scripts are shared by every venue**: they take the venue folder from `$VENUE_DIR`
+  and the style name from `$VENUE`, both set by `make_all.py`, so a fix or a new number lands in every venue
+  at once. Never copy a script per venue: the copies drift. Include figures in LaTeX at the exact width they were made for
   (`\includegraphics[width=\linewidth]`), never scaled.
 - **Data plots:** say the takeaway in the caption, not in a title inside the figure; label axes with units;
   use the colorblind-safe palette plus markers or line styles; state what error bars show (min/max, std,
@@ -155,10 +158,15 @@ disclosure must match the paper.
 ## P7: Compile and check
 
 ```bash
-python3 figures/scripts/make_all.py            # regenerate values, tables, figures
+python3 ../figures_scripts/make_all.py <venue-dir>     # regenerate values, tables, figures from the data
 tectonic -Z search-path=template main.tex --keep-logs --keep-intermediates   # template/ stays unmodified
-python3 <skill>/scripts/check_paper.py . --page-limit <N> [--anonymous --author "<name>" ...] --verify-citations --report checks.md
+python3 <skill>/scripts/check_paper.py . --page-limit <N> [--anonymous --author "<name>" ...] \
+    --verify-citations --regenerate --python python3.9 --report checks.md
 ```
+
+`--regenerate` re-runs the scripts and fails if any figure or value changes, which is what proves the paper
+matches its data rather than a stale build. Pass the project's interpreter with `--python`: another
+matplotlib version draws different bytes. `make_all.py` pins `SOURCE_DATE_EPOCH` so rebuilds are identical.
 
 Put `\label{pw:mainend}` right where the page-limited main text ends (before references, or before
 statements that don't count).
