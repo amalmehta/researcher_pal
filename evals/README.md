@@ -76,6 +76,9 @@ single exercise. The skill's own faults were real too: one run described an attr
 when the paper states it outright.
 
 ## Honest limits of this run
+
+- **The grader is an AI model**, not a subject expert and not a learner. It checks material against the
+  paper's text; it cannot tell you whether anyone learns faster from it.
 - **Three papers, one run each.** No variance estimate; a difference on a single paper is not a result.
 - **The scope was bounded** so runs stay comparable, which leaves the skill's most distinctive parts
   (animations, tutoring, knowledge graph) unmeasured.
