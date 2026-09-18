@@ -3,7 +3,7 @@ import numpy as np
 
 import data
 import figure_style as fs
-from venue_config import VENUE
+from data import VENUE
 
 curves = data.curves()
 STYLE = {  # (palette index, line style, marker): the two warmup runs overlap, so they differ in dash and marker

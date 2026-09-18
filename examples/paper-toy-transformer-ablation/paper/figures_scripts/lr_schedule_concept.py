@@ -8,7 +8,7 @@ import subprocess
 
 import data
 import figure_style as fs
-from venue_config import VENUE
+from data import VENUE
 
 env = data.environment()
 rows = data.runs()

@@ -29,7 +29,7 @@ None versus the built-in profile. See `venue.md` for the NeurIPS → ICLR differ
 | New `main.tex` from the official ICLR shell; `iclr2027_conference.bst` bibliography style | `main.tex`, `template/` |
 | NeurIPS checklist removed | — |
 | **AI use statement** (required) and **reproducibility statement** (recommended) added after the conclusion, outside the page limit | `sections/statements.tex` |
-| All values, tables and figures regenerated for the ICLR layout (same 397.48 pt text width) | `figures/scripts/venue_config.py` |
+| All values, tables and figures regenerated for the ICLR layout (same 397.48 pt text width) | `../figures_scripts/` (shared; venue passed in by `make_all.py`) |
 | Sections copied unchanged: the page budget and section structure fit ICLR as is | `sections/*.tex` |
 
 ## 4. What the review found (P7 read-through)

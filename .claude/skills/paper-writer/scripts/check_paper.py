@@ -8,7 +8,8 @@
     python3 check_paper.py paper/<slug>/<venue> --citations-only --bib inputs/refs.bib --citations-out p6_citations.md
 
 Expects the paper folder layout from SKILL.md:
-    main.tex, sections/*.tex, generated/values.tex, figures/*.pdf, figures/scripts/*.py, refs.bib, sources.md
+    main.tex, sections/*.tex, generated/values.tex, figures/*.pdf, refs.bib, sources.md
+with the figure scripts in <venue>/figures/scripts/ or, shared by every venue, <paper>/figures_scripts/
 and a compile with intermediates kept:
     tectonic main.tex --keep-logs --keep-intermediates
 Put \\label{pw:mainend} at the end of the page-limited main text (before statements or references that
@@ -24,13 +25,17 @@ Prints a Markdown report. Exit code 1 if any check FAILs. Standard library only.
 import argparse
 import difflib
 import json
+import os
 import re
+import ssl
+import subprocess
 import sys
 import time
 import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
+import zlib
 from pathlib import Path
 
 RESULTS = []  # (status, check, detail)
@@ -157,6 +162,19 @@ def check_todos(paper, main):
 
 
 # ---------------------------------------------------------------- figures regenerate from scripts
+def script_dirs(paper):
+    """Per-venue scripts, then scripts shared by every venue of the same paper."""
+    return [paper / "figures" / "scripts", paper.parent / "figures_scripts"]
+
+
+def find_script(paper, stem):
+    for directory in script_dirs(paper):
+        candidate = directory / (stem + ".py")
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def check_figures(paper, main):
     everything = "\n".join(tex_sources(paper, main).values())
     problems = []
@@ -164,12 +182,80 @@ def check_figures(paper, main):
         path = paper / target
         if path.suffix == "":
             path = path.with_suffix(".pdf")
-        script = paper / "figures" / "scripts" / (path.stem + ".py")
         if not path.exists():
             problems.append("%s missing" % target)
-        if not script.exists():
-            problems.append("no script figures/scripts/%s.py for %s" % (path.stem, target))
+        if not find_script(paper, path.stem):
+            problems.append("no script %s.py for %s (looked in %s)"
+                            % (path.stem, target, " and ".join(str(d.name) for d in script_dirs(paper))))
     record("FAIL" if problems else "PASS", "figures have scripts", "; ".join(problems) or "all figures have a generating script")
+
+
+# ---------------------------------------------------------------- figures and values match the data
+PDF_VOLATILE = [re.compile(rb"/(?:CreationDate|ModDate)\s*\(D:[^)]*\)"), re.compile(rb"/ID\s*\[[^\]]*\]"),
+                re.compile(rb"/Producer\s*\([^)]*\)"), re.compile(rb"<xmp:(CreateDate|ModifyDate)>[^<]*</xmp:\1>")]
+
+
+def strip_volatile(data):
+    for pattern in PDF_VOLATILE:
+        data = pattern.sub(b"", data)
+    return data
+
+
+def stable_bytes(path):
+    """File contents with per-run timestamps removed, so two runs of the same script compare equal.
+    PDF streams are decompressed first: Cairo (Graphviz, rsvg-convert) hides its /CreationDate inside one."""
+    data = path.read_bytes()
+    if not data.startswith(b"%PDF"):
+        return strip_volatile(data)
+    parts, pos = [], 0
+    for match in re.finditer(rb"stream\r?\n(.*?)endstream", data, re.S):
+        parts.append(strip_volatile(data[pos:match.start()]))
+        try:
+            body = zlib.decompress(match.group(1))
+        except zlib.error:
+            body = match.group(1)
+        parts.append(strip_volatile(body))
+        pos = match.end()
+    parts.append(strip_volatile(data[pos:]))
+    return b"".join(parts)
+
+
+def generated_files(paper):
+    files = sorted((paper / "generated").glob("*")) + sorted((paper / "figures").glob("*.pdf")) \
+        + sorted((paper / "figures").glob("*.png"))
+    return {f: stable_bytes(f) for f in files if f.is_file()}
+
+
+def check_regenerated(paper, python=None):
+    """Re-run the figure and value scripts and compare: the paper's numbers and figures must match the data
+    they claim to come from, not merely exist."""
+    make_all = find_script(paper, "make_all")
+    if make_all is None:
+        record("WARN", "figures and values match the data", "no make_all.py found; skipped")
+        return
+    before = generated_files(paper)
+    if not before:
+        record("WARN", "figures and values match the data", "nothing generated yet; skipped")
+        return
+    env = dict(os.environ, SOURCE_DATE_EPOCH="0", VENUE_DIR=str(paper.resolve()), MPLBACKEND="Agg", PYTHONWARNINGS="ignore")
+    make_all = make_all.resolve()
+    try:
+        done = subprocess.run([python or sys.executable, "-W", "ignore", str(make_all), str(paper.resolve())],
+                              cwd=str(make_all.parent), env=env, capture_output=True, text=True, timeout=900)
+    except (OSError, subprocess.SubprocessError) as exc:
+        record("FAIL", "figures and values match the data", "could not run %s: %s" % (make_all.name, exc))
+        return
+    if done.returncode != 0:
+        tail = (done.stderr or done.stdout or "").strip().splitlines()[-3:]
+        record("FAIL", "figures and values match the data", "%s failed: %s" % (make_all.name, " / ".join(tail)))
+        return
+    after = generated_files(paper)
+    changed = sorted(str(f.relative_to(paper)) for f in set(before) | set(after) if before.get(f) != after.get(f))
+    record("FAIL" if changed else "PASS", "figures and values match the data",
+           ("regenerating changed %d file(s): %s. Either the paper was built from stale data (regenerate and "
+            "recompile), or the figures were built by a different Python/matplotlib than %s (pass --python)."
+            % (len(changed), ", ".join(changed[:6]), Path(python or sys.executable).name)) if changed
+           else "%d generated files reproduce exactly from the data" % len(after))
 
 
 # ---------------------------------------------------------------- citations
@@ -220,13 +306,36 @@ def first_author_surname(fields):
     return (first.split(",")[0] if "," in first else first.split()[-1]).strip().lower()
 
 
+_SSL_CONTEXT = None
+
+
+def ssl_context():
+    """Some Python builds (python.org on macOS) ship with an empty CA store, so every HTTPS call fails.
+    Fall back to the system store, then certifi. Verification always stays on."""
+    global _SSL_CONTEXT
+    if _SSL_CONTEXT is None:
+        _SSL_CONTEXT = ssl.create_default_context()
+        if not _SSL_CONTEXT.cert_store_stats().get("x509_ca"):
+            for candidate in (os.environ.get("SSL_CERT_FILE"), "/etc/ssl/cert.pem", "/private/etc/ssl/cert.pem"):
+                if candidate and Path(candidate).exists():
+                    _SSL_CONTEXT = ssl.create_default_context(cafile=candidate)
+                    break
+            else:
+                try:
+                    import certifi
+                    _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+                except ImportError:
+                    pass
+    return _SSL_CONTEXT
+
+
 def fetch(url, headers=None, attempts=4):
     """GET with backoff on rate limits and timeouts."""
     delay = 3.0
     for attempt in range(attempts):
         try:
             request = urllib.request.Request(url, headers=dict({"User-Agent": USER_AGENT}, **(headers or {})))
-            with urllib.request.urlopen(request, timeout=30) as response:
+            with urllib.request.urlopen(request, timeout=30, context=ssl_context()) as response:
                 return response.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as exc:
             if exc.code not in (429, 500, 502, 503, 504) or attempt == attempts - 1:
@@ -363,6 +472,11 @@ def main():
     parser.add_argument("--anonymous", action="store_true")
     parser.add_argument("--author", action="append", default=[], help="name, affiliation or email that must not appear")
     parser.add_argument("--verify-citations", action="store_true")
+    parser.add_argument("--regenerate", action="store_true",
+                        help="re-run the figure and value scripts and fail if anything changes (the real check "
+                             "that the paper matches its data; needs the scripts' dependencies installed)")
+    parser.add_argument("--python", help="interpreter that builds the figures (default: the one running this "
+                                         "script). Use the project's, or matplotlib versions will differ.")
     parser.add_argument("--citations-only", action="store_true", help="only verify the .bib file")
     parser.add_argument("--bib", type=Path, help="bib file to verify (default: <paper>/refs.bib)")
     parser.add_argument("--citations-out", type=Path, help="where to write the verification table")
@@ -378,6 +492,8 @@ def main():
             check_anonymity(args.paper, args.main, args.author)
         check_numbers(args.paper, args.main)
         check_figures(args.paper, args.main)
+        if args.regenerate:
+            check_regenerated(args.paper, args.python)
         check_citations(args.paper, args.verify_citations, args.bib, args.citations_out)
         check_todos(args.paper, args.main)
 
