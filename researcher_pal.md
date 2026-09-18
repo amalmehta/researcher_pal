@@ -338,9 +338,13 @@ OPEN QUESTIONS / ASSUMPTIONS:
 OPEN QUESTIONS / ASSUMPTIONS (continued):
 
 - Evaluation (2026-09-18): three papers from August 2026 (after the model's cutoff), two conditions each
-  (with researcher-pal, and the same task with no skill), same model, paper text supplied locally. Blind
-  AI grading stalled repeatedly on infrastructure, so the reported comparison is structural metrics plus a
-  non-blind reading. That is weaker evidence than the rubric asks for; evals/rubric.md keeps the protocol.
+  (with researcher-pal, and the same task with no skill), same model, paper text supplied locally. Blind AI
+  grading preferred the skill on all three (53/54 vs 40/54), with no fabrication on either side. Caveats in
+  evals/README.md: an AI grader, one run per paper, and the animations, tutor loop and knowledge graph
+  were out of scope. Early grader runs stalled on infrastructure; strict read-only, low-tool-call prompts fixed it.
+- The Attention final-exercise test asserts it trains in under 5 minutes. That fails when the machine is busy
+  (it took over 5 min while three agents and a LaTeX compile ran; 153 s on an idle machine). Run the full
+  checks when nothing else is competing for the CPU.
 - Free literature APIs: DBLP is not usable from a script (its search API serves an anti-bot HTML page), so
   paper-ideas searches OpenAlex, Crossref, arXiv and Semantic Scholar, and caches successes on disk.
 - The python.org Python 3.9 on this Mac has an empty CA store, so every HTTPS call from it failed. Both
