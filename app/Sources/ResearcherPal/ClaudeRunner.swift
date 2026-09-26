@@ -9,6 +9,9 @@ final class ClaudeRunner: ObservableObject {
         let id = UUID()
         let kind: Kind
         let text: String
+        /// What the transcript shows: a short label for the long prompts the app writes.
+        var label: String?
+        var shown: String { label ?? text }
     }
 
     struct Settings {
@@ -39,15 +42,15 @@ final class ClaudeRunner: ObservableObject {
     }
 
     /// Start a fresh conversation in `directory`.
-    func start(prompt: String, in directory: URL, settings: Settings) {
+    func start(prompt: String, label: String? = nil, in directory: URL, settings: Settings) {
         clear()
-        run(prompt: prompt, in: directory, settings: settings, resume: nil)
+        run(prompt: prompt, label: label, in: directory, settings: settings, resume: nil)
     }
 
     /// Answer the assistant's question (the skills pause and ask) and continue the same session.
     func reply(_ text: String, in directory: URL, settings: Settings) {
         guard let sessionID else { return }
-        run(prompt: text, in: directory, settings: settings, resume: sessionID)
+        run(prompt: text, label: nil, in: directory, settings: settings, resume: sessionID)
     }
 
     func stop() {
@@ -56,9 +59,21 @@ final class ClaudeRunner: ObservableObject {
         isRunning = false
     }
 
-    private func run(prompt: String, in directory: URL, settings: Settings, resume: String?) {
+    /// Appends an item, watching every line for the "not logged in" failure: it can arrive on stderr, in a
+    /// result, or as ordinary assistant text, and the banner has to show in all three cases.
+    private func append(_ item: Item) {
+        let text = item.text
+        if text.contains("OAuth") || text.contains("/login")
+            || text.localizedCaseInsensitiveContains("authentication_error")
+            || text.localizedCaseInsensitiveContains("401") && text.localizedCaseInsensitiveContains("api error") {
+            needsLogin = true
+        }
+        items.append(item)
+    }
+
+    private func run(prompt: String, label: String?, in directory: URL, settings: Settings, resume: String?) {
         guard !isRunning else { return }
-        items.append(Item(kind: .user, text: prompt))
+        append(Item(kind: .user, text: prompt, label: label))
         isRunning = true
         lastError = nil
         buffer = ""
@@ -109,7 +124,7 @@ final class ClaudeRunner: ObservableObject {
         } catch {
             isRunning = false
             lastError = "Could not start claude: \(error.localizedDescription)"
-            items.append(Item(kind: .error, text: lastError!))
+            append(Item(kind: .error, text: lastError!))
         }
     }
 
@@ -125,8 +140,7 @@ final class ClaudeRunner: ObservableObject {
     private func consumeError(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        noticeLoginProblem(in: trimmed)
-        items.append(Item(kind: .error, text: trimmed))
+        append(Item(kind: .error, text: trimmed))
     }
 
     private func handle(line: String) {
@@ -143,9 +157,9 @@ final class ClaudeRunner: ObservableObject {
                 switch part["type"] as? String {
                 case "text":
                     let text = (part["text"] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !text.isEmpty { items.append(Item(kind: .assistant, text: text)) }
+                    if !text.isEmpty { append(Item(kind: .assistant, text: text)) }
                 case "tool_use":
-                    items.append(Item(kind: .tool, text: Self.describe(tool: part)))
+                    append(Item(kind: .tool, text: Self.describe(tool: part)))
                 default:
                     break
                 }
@@ -155,20 +169,12 @@ final class ClaudeRunner: ObservableObject {
             costUSD = event["total_cost_usd"] as? Double ?? costUSD
             let subtype = event["subtype"] as? String ?? "done"
             if subtype != "success", let text = event["result"] as? String {
-                noticeLoginProblem(in: text)
-                items.append(Item(kind: .error, text: text))
+                append(Item(kind: .error, text: text))
             }
             let turns = event["num_turns"] as? Int ?? 0
-            items.append(Item(kind: .result, text: "\(subtype) · \(turns) turns · $\(String(format: "%.2f", costUSD))"))
+            append(Item(kind: .result, text: "\(subtype) · \(turns) turns · $\(String(format: "%.2f", costUSD))"))
         default:
             break
-        }
-    }
-
-    private func noticeLoginProblem(in text: String) {
-        if text.contains("OAuth") || text.localizedCaseInsensitiveContains("authentication_error")
-            || text.contains("/login") {
-            needsLogin = true
         }
     }
 
@@ -176,8 +182,8 @@ final class ClaudeRunner: ObservableObject {
         isRunning = false
         process = nil
         if status != 0 && status != 15 && !needsLogin {
-            lastError = "claude exited with status \(status)"
-            items.append(Item(kind: .error, text: lastError!))
+            lastError = "The assistant exited with status \(status)"
+            append(Item(kind: .error, text: lastError!))
         }
     }
 

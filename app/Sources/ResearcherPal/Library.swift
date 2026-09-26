@@ -63,23 +63,24 @@ final class Library: ObservableObject {
             .filter { $0.hasDirectoryPath && !$0.lastPathComponent.hasPrefix("_") }
             .sorted { $0.lastPathComponent < $1.lastPathComponent } ?? []
         let ideas = dir.appendingPathComponent("ideas/ideas.md")
-        let arxiv = try? String(contentsOf: dir.appendingPathComponent(".arxiv"), encoding: .utf8)
+        let arxiv = (try? String(contentsOf: dir.appendingPathComponent(".arxiv"), encoding: .utf8))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
         return Paper(
             slug: dir.lastPathComponent,
-            title: title(graph: hasGraph ? graph : nil, slug: dir.lastPathComponent),
+            title: title(graph: hasGraph ? graph : nil, slug: dir.lastPathComponent, arxiv: arxiv),
             directory: dir,
             hasPDF: fm.fileExists(atPath: dir.appendingPathComponent("paper.pdf").path),
             conceptGraph: hasGraph ? graph : nil,
             animations: animations,
             exercises: exercises,
             ideas: fm.fileExists(atPath: ideas.path) ? ideas : nil,
-            arxivID: arxiv?.trimmingCharacters(in: .whitespacesAndNewlines)
+            arxivID: arxiv
         )
     }
 
     /// The concept graph's first heading is the paper's real title; fall back to the folder name.
-    private func title(graph: URL?, slug: String) -> String {
+    private func title(graph: URL?, slug: String, arxiv: String?) -> String {
         if let graph, let text = try? String(contentsOf: graph, encoding: .utf8),
            let heading = text.split(separator: "\n").first(where: { $0.hasPrefix("# ") }) {
             var name = heading.dropFirst(2).trimmingCharacters(in: .whitespaces)
@@ -88,6 +89,7 @@ final class Library: ObservableObject {
             }
             return name
         }
+        if let arxiv { return "arXiv " + arxiv }
         return slug.replacingOccurrences(of: "-", with: " ").capitalized
     }
 
