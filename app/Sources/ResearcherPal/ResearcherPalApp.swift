@@ -264,7 +264,7 @@ struct PaperView: View {
         runner.start(prompt: """
         Suggest improvements for the paper in \(paper.directory.path), in learned-paper mode. Write the report \
         to \(paper.directory.path)/ideas/ideas.md. Stop at the ranked list and ask me before applying or running anything.
-        """, in: paper.directory, settings: settings)
+        """, label: "Suggest improvements", in: paper.directory, settings: settings)
     }
 }
 
@@ -317,26 +317,32 @@ struct RunPane: View {
     private var loginBanner: some View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-            Text("Claude Code is not logged in. Open Terminal, run `claude`, then `/login`, and try again.")
-                .font(.callout)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Not logged in").font(.callout.weight(.medium))
+                Text("Run `claude` in Terminal, type /login, finish in the browser, then try again.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Spacer()
+            Button("Open Terminal") {
+                NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"))
+            }
         }
         .padding(10)
-        .background(Color.orange.opacity(0.12))
+        .background(Color.orange.opacity(0.14))
     }
 
     @ViewBuilder private func row(_ item: ClaudeRunner.Item) -> some View {
         switch item.kind {
         case .user:
-            label(item.text, icon: "person.fill", color: .accentColor)
+            label(item.shown, icon: "person.fill", color: .accentColor)
         case .assistant:
-            Text(item.text).textSelection(.enabled)
+            Text(item.shown).textSelection(.enabled)
         case .tool:
-            label(item.text, icon: "wrench.and.screwdriver", color: .secondary)
+            label(item.shown, icon: "wrench.and.screwdriver", color: .secondary)
         case .result:
-            label(item.text, icon: "checkmark.circle", color: .green)
+            label(item.shown, icon: "checkmark.circle", color: .green)
         case .error:
-            label(item.text, icon: "xmark.octagon", color: .red)
+            label(item.shown, icon: "xmark.octagon", color: .red)
         }
     }
 
