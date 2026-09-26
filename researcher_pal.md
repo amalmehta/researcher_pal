@@ -194,28 +194,28 @@ CONSTRAINTS — paper-ideas:
 
 DELIVERABLES:
 
-- .claude/skills/researcher-pal/SKILL.md — the skill: the workflow above plus tutoring rules
-- .claude/skills/researcher-pal/references/concept_graph_template.md — template for concept entries and the Mermaid diagram
-- .claude/skills/researcher-pal/references/exercise_template.md — templates for coded exercises (README, stub, tests) and worked problems
-- .claude/skills/researcher-pal/references/knowledge_graph_template.md — format and merge rules for the cross-paper knowledge graph
-- .claude/skills/researcher-pal/assets/animation_template.html — starter animation page with play/step/scrub controls, a slider and KaTeX
+- skills/researcher-pal/SKILL.md — the skill: the workflow above plus tutoring rules
+- skills/researcher-pal/references/concept_graph_template.md — template for concept entries and the Mermaid diagram
+- skills/researcher-pal/references/exercise_template.md — templates for coded exercises (README, stub, tests) and worked problems
+- skills/researcher-pal/references/knowledge_graph_template.md — format and merge rules for the cross-paper knowledge graph
+- skills/researcher-pal/assets/animation_template.html — starter animation page with play/step/scrub controls, a slider and KaTeX
 - ~/.claude/skills/researcher-pal — symlink to the skill so it works from any folder
 - examples/attention-is-all-you-need/ — a full run on the ML test paper (graph, animations, exercises, solutions)
 - examples/barabasi-albert-scaling/ — a light run on a non-ML test paper (graph, 1–2 animations, 2–3 exercises)
 - examples/knowledge_graph.md — the knowledge graph after both example runs, showing topics merged across papers
-- .claude/skills/paper-writer/SKILL.md — the paper-writer workflow (P1–P9)
-- .claude/skills/paper-writer/references/venues/<venue>.md — one profile each for NeurIPS, ICML, ICLR
-- .claude/skills/paper-writer/references/venue_profile_template.md — how to profile any venue from its CFP
-- .claude/skills/paper-writer/references/writing_guide.md — section-by-section guidance, with per-venue tone
-- .claude/skills/paper-writer/assets/figure_style.py — matplotlib helper for venue widths, fonts, palette
-- .claude/skills/paper-writer/scripts/check_paper.py — page limit, anonymity, unsourced numbers, unresolved references
+- skills/paper-writer/SKILL.md — the paper-writer workflow (P1–P9)
+- skills/paper-writer/references/venues/<venue>.md — one profile each for NeurIPS, ICML, ICLR
+- skills/paper-writer/references/venue_profile_template.md — how to profile any venue from its CFP
+- skills/paper-writer/references/writing_guide.md — section-by-section guidance, with per-venue tone
+- skills/paper-writer/assets/figure_style.py — matplotlib helper for venue widths, fonts, palette
+- skills/paper-writer/scripts/check_paper.py — page limit, anonymity, unsourced numbers, unresolved references
 - ~/.claude/skills/paper-writer — symlink to the skill so it works from any folder
 - examples/paper-toy-transformer-ablation/ — a 4-page workshop-style test paper (toy Transformer ablation: warmup and √d_k scaling, 3 seeds) produced for NeurIPS and ICLR formats
-- .claude/skills/paper-ideas/SKILL.md — the paper-ideas workflow (I1–I7)
-- .claude/skills/paper-ideas/references/idea_catalog.md — what to look for, per idea type and venue
-- .claude/skills/paper-ideas/scripts/lit_search.py — keyword search over arXiv, Semantic Scholar and Crossref, returning verified records
-- .claude/skills/paper-ideas/scripts/check_ideas.py — checks an ideas.md: complete cards, all four types, valid labels, verified cited IDs, working links
-- .claude/skills/researcher-pal/assets/animation_player.js|css — the shared animation player (skeleton, timeline, controls, drawing helpers), copied once per paper
+- skills/paper-ideas/SKILL.md — the paper-ideas workflow (I1–I7)
+- skills/paper-ideas/references/idea_catalog.md — what to look for, per idea type and venue
+- skills/paper-ideas/scripts/lit_search.py — keyword search over arXiv, Semantic Scholar and Crossref, returning verified records
+- skills/paper-ideas/scripts/check_ideas.py — checks an ideas.md: complete cards, all four types, valid labels, verified cited IDs, working links
+- skills/researcher-pal/assets/animation_player.js|css — the shared animation player (skeleton, timeline, controls, drawing helpers), copied once per paper
 - tests/ — unit tests for check_paper.py, lit_search.py and check_ideas.py (37 tests)
 - tools/checks.sh, tools/run_example_tests.py — one runner for every check; CI runs the same script
 - .github/workflows/ci.yml — GitHub Actions: unit tests, ideas reports, site build, exercise suites, both paper compiles with --regenerate

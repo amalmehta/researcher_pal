@@ -4,7 +4,7 @@ A Mac app for the reading side of this project: drop in a paper, and it studies 
 suggests what would make it stronger.
 
 It has no model of its own. It drives the `claude` command already installed on this Mac, with the three
-skills in `.claude/skills/`, so there is **no API key and no separate billing** — it uses your Claude Code login.
+skills in `skills/`, so there is **no API key and no separate billing** — it uses your Claude Code login.
 
 ## Build
 

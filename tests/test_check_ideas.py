@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / ".claude/skills/paper-ideas/scripts/check_ideas.py"
+SCRIPT = ROOT / "skills/paper-ideas/scripts/check_ideas.py"
 
 CARD = """
 ### I-0{n} · {title}
