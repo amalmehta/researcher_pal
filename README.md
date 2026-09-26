@@ -14,7 +14,7 @@ Three [Claude Code](https://claude.com/claude-code) skills for working with rese
 2. Link the skills so Claude Code can use them from any folder:
 
    ```bash
-   for s in researcher-pal paper-writer paper-ideas; do ln -s "$PWD/.claude/skills/$s" ~/.claude/skills/$s; done
+   mkdir -p ~/.claude/skills && for s in researcher-pal paper-writer paper-ideas; do ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s; done
    ```
 
 3. Open Claude Code and say one of the phrases above.
@@ -28,11 +28,12 @@ Three [Claude Code](https://claude.com/claude-code) skills for working with rese
 
 | Folder | Contents |
 |---|---|
-| `.claude/skills/` | The three skills |
+| `skills/` | The three skills, linked into ~/.claude/skills by the install step |
 | `examples/attention-is-all-you-need/` | A full learning run: concept map, 4 animations, 12 exercises |
 | `examples/barabasi-albert-scaling/` | A learning run on a non-ML paper, plus improvement ideas and an experiment |
 | `examples/paper-toy-transformer-ablation/` | A short example paper built for NeurIPS and ICLR, plus improvement ideas and an experiment |
 | `examples/knowledge_graph.md` | Topics learned across both papers |
+| `app/` | The Mac app: drop a paper in and study it |
 | `site/` | A static site for browsing the examples |
 | `tests/`, `tools/` | Unit tests for the skills' scripts, and the check runner |
 | `evals/` | How the learning skill is evaluated against papers it has never seen |

@@ -22,7 +22,7 @@ step() {  # step <name> <command...>
 
 step "unit tests (skill scripts)" "$PY" -m pytest
 
-step "ideas reports" "$PY" .claude/skills/paper-ideas/scripts/check_ideas.py \
+step "ideas reports" "$PY" skills/paper-ideas/scripts/check_ideas.py \
   examples/paper-toy-transformer-ablation/paper/ideas/ideas.md \
   examples/barabasi-albert-scaling/ideas/ideas.md
 
@@ -43,7 +43,7 @@ if [ "$QUICK" != "--quick" ]; then
     for venue in neurips2026 iclr2027; do
       dir="examples/paper-toy-transformer-ablation/paper/$venue"
       step "$venue compiles" bash -c "cd '$dir' && '$TECTONIC' -Z search-path=template main.tex --keep-logs --keep-intermediates > compile.out 2>&1"
-      step "$venue checks (figures and values match the data)" "$PY" .claude/skills/paper-writer/scripts/check_paper.py \
+      step "$venue checks (figures and values match the data)" "$PY" skills/paper-writer/scripts/check_paper.py \
         "$dir" --page-limit 4 --anonymous --regenerate --python "$PY"
     done
   else
