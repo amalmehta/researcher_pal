@@ -192,7 +192,7 @@ def check_figures(paper, main):
 
 # ---------------------------------------------------------------- figures and values match the data
 PDF_VOLATILE = [re.compile(rb"/(?:CreationDate|ModDate)\s*\(D:[^)]*\)"), re.compile(rb"/ID\s*\[[^\]]*\]"),
-                re.compile(rb"/Producer\s*\([^)]*\)"), re.compile(rb"<xmp:(CreateDate|ModifyDate)>[^<]*</xmp:\1>")]
+                re.compile(rb"/(?:Producer|Creator)\s*\([^)]*\)"), re.compile(rb"<xmp:(CreateDate|ModifyDate)>[^<]*</xmp:\1>")]
 
 
 def strip_volatile(data):
@@ -220,20 +220,23 @@ def stable_bytes(path):
     return b"".join(parts)
 
 
-def generated_files(paper):
-    files = sorted((paper / "generated").glob("*")) + sorted((paper / "figures").glob("*.pdf")) \
-        + sorted((paper / "figures").glob("*.png"))
+def generated_files(paper, figures=True):
+    files = sorted((paper / "generated").rglob("*"))
+    if figures:
+        files += sorted((paper / "figures").glob("*.pdf")) + sorted((paper / "figures").glob("*.png"))
     return {f: stable_bytes(f) for f in files if f.is_file()}
 
 
-def check_regenerated(paper, python=None):
+def check_regenerated(paper, python=None, compare_figures=True):
     """Re-run the figure and value scripts and compare: the paper's numbers and figures must match the data
-    they claim to come from, not merely exist."""
+    they claim to come from, not merely exist. With compare_figures=False the figures must still rebuild,
+    but only the values and tables are compared: figures depend on the machine's fonts, Graphviz and Cairo,
+    so a figure built on macOS never matches one built on Linux byte for byte."""
     make_all = find_script(paper, "make_all")
     if make_all is None:
         record("WARN", "figures and values match the data", "no make_all.py found; skipped")
         return
-    before = generated_files(paper)
+    before = generated_files(paper, compare_figures)
     if not before:
         record("WARN", "figures and values match the data", "nothing generated yet; skipped")
         return
@@ -249,13 +252,14 @@ def check_regenerated(paper, python=None):
         tail = (done.stderr or done.stdout or "").strip().splitlines()[-3:]
         record("FAIL", "figures and values match the data", "%s failed: %s" % (make_all.name, " / ".join(tail)))
         return
-    after = generated_files(paper)
+    after = generated_files(paper, compare_figures)
     changed = sorted(str(f.relative_to(paper)) for f in set(before) | set(after) if before.get(f) != after.get(f))
     record("FAIL" if changed else "PASS", "figures and values match the data",
            ("regenerating changed %d file(s): %s. Either the paper was built from stale data (regenerate and "
             "recompile), or the figures were built by a different Python/matplotlib than %s (pass --python)."
             % (len(changed), ", ".join(changed[:6]), Path(python or sys.executable).name)) if changed
-           else "%d generated files reproduce exactly from the data" % len(after))
+           else "%d generated files reproduce exactly from the data%s"
+           % (len(after), "" if compare_figures else " (figures rebuilt, not compared: --no-figure-compare)"))
 
 
 # ---------------------------------------------------------------- citations
@@ -477,6 +481,9 @@ def main():
                              "that the paper matches its data; needs the scripts' dependencies installed)")
     parser.add_argument("--python", help="interpreter that builds the figures (default: the one running this "
                                          "script). Use the project's, or matplotlib versions will differ.")
+    parser.add_argument("--no-figure-compare", action="store_true",
+                        help="with --regenerate: rebuild the figures but compare only values and tables, for a "
+                             "machine other than the one that built the figures (e.g. CI on Linux)")
     parser.add_argument("--citations-only", action="store_true", help="only verify the .bib file")
     parser.add_argument("--bib", type=Path, help="bib file to verify (default: <paper>/refs.bib)")
     parser.add_argument("--citations-out", type=Path, help="where to write the verification table")
@@ -493,7 +500,7 @@ def main():
         check_numbers(args.paper, args.main)
         check_figures(args.paper, args.main)
         if args.regenerate:
-            check_regenerated(args.paper, args.python)
+            check_regenerated(args.paper, args.python, not args.no_figure_compare)
         check_citations(args.paper, args.verify_citations, args.bib, args.citations_out)
         check_todos(args.paper, args.main)
 
