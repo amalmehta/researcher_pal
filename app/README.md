@@ -59,6 +59,7 @@ Nothing is hidden in an app container: it's plain files you can open, edit and b
 | `Sources/ResearcherPal/WebPane.swift` | Renders Markdown (with equations and diagrams) and animations in a web view |
 | `Sources/ResearcherPal/ResearcherPalApp.swift` | Window, library sidebar, tabs, run panel, settings |
 | `make_app.sh` | Builds and assembles the `.app` bundle |
+| `make_icon.swift` | Draws the app icon (a page with a concept graph); `make_app.sh` turns it into `AppIcon.icns` |
 
 ## Known limits
 
