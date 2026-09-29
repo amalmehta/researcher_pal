@@ -140,6 +140,7 @@ def regen_paper(tmp_path, script):
     (paper / "generated" / "tables" / "results.tex").write_text("0.42\n")
     (paper / "figures" / "loss.pdf").write_bytes(b"%PDF-1.4 figure\n")
     (paper / "figures" / "src" / "loss.svg").write_text("<svg/>")
+    (paper / "sources.md").write_text("| valSteps | 1500 |\n")
     scripts = paper / "figures" / "scripts"
     scripts.mkdir()
     (scripts / "make_all.py").write_text("import sys\nfrom pathlib import Path\nv = Path(sys.argv[1])\n" + script)
@@ -163,6 +164,7 @@ REWRITES_SAME = """
 (v / "generated" / "tables" / "results.tex").write_text("0.42\\n")
 (v / "figures" / "loss.pdf").write_bytes(b"%PDF-1.4 figure\\n")
 (v / "figures" / "src" / "loss.svg").write_text("<svg/>")
+(v / "sources.md").write_text("| valSteps | 1500 |\\n")
 """
 
 STALE = """
@@ -199,6 +201,16 @@ def test_regenerate_restores_after_the_scripts_crash(tmp_path):
     cp.check_regenerated(paper)
     status, detail = statuses()["figures and values match the data"]
     assert status == "FAIL" and "boom" in detail
+    assert tree(paper) == original
+
+
+def test_regenerate_catches_and_restores_a_stale_sources_md(tmp_path):
+    paper = regen_paper(tmp_path, REWRITES_SAME + '(v / "sources.md").write_text("| valSteps | 2000 |\\n")\n')
+    rewrite(paper)
+    original = tree(paper)
+    cp.check_regenerated(paper)
+    status, detail = statuses()["figures and values match the data"]
+    assert status == "FAIL" and "sources.md" in detail
     assert tree(paper) == original
 
 

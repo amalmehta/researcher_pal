@@ -40,11 +40,18 @@ if [ "$QUICK" != "--quick" ]; then
 
   TECTONIC=$(command -v tectonic || echo "$HOME/.local/bin/tectonic")
   if [ -x "$TECTONIC" ]; then
+    # Compile into a scratch folder: the PDFs, logs and compile.out in the paper folders are committed
+    # results, and a check must not rewrite them.
+    BUILD=$(mktemp -d)
+    trap 'rm -rf "$BUILD"' EXIT
     for venue in neurips2026 iclr2027; do
       dir="examples/paper-toy-transformer-ablation/paper/$venue"
-      step "$venue compiles" bash -c "cd '$dir' && '$TECTONIC' -Z search-path=template main.tex --keep-logs --keep-intermediates > compile.out 2>&1"
+      mkdir -p "$BUILD/$venue"
+      step "$venue compiles" bash -c "cd '$dir' && '$TECTONIC' -Z search-path=template main.tex --keep-logs \
+        --keep-intermediates --outdir '$BUILD/$venue' > '$BUILD/$venue/compile.out' 2>&1 \
+        || { tail -20 '$BUILD/$venue/compile.out'; false; }"
       step "$venue checks (figures and values match the data)" "$PY" skills/paper-writer/scripts/check_paper.py \
-        "$dir" --page-limit 4 --anonymous --regenerate --python "$PY"
+        "$dir" --build-dir "$BUILD/$venue" --page-limit 4 --anonymous --regenerate --python "$PY"
     done
   else
     echo ""; echo "=== paper compile: skipped (no tectonic)"

@@ -12,6 +12,8 @@ Expects the paper folder layout from SKILL.md:
 with the figure scripts in <venue>/figures/scripts/ or, shared by every venue, <paper>/figures_scripts/
 and a compile with intermediates kept:
     tectonic main.tex --keep-logs --keep-intermediates
+or, to leave the paper folder untouched, compiled elsewhere and pointed at with --build-dir:
+    tectonic main.tex --keep-logs --keep-intermediates --outdir /tmp/build
 Put \\label{pw:mainend} at the end of the page-limited main text (before statements or references that
 don't count), so the page count comes from where the main text really ends.
 
@@ -51,8 +53,8 @@ def strip_comments(tex):
 
 
 # ---------------------------------------------------------------- compile log and page count
-def check_log(paper, main):
-    log = paper / (Path(main).stem + ".log")
+def check_log(build, main):
+    log = build / (Path(main).stem + ".log")
     if not log.exists():
         record("FAIL", "compile log", "%s not found: compile with --keep-logs --keep-intermediates" % log.name)
         return
@@ -72,8 +74,8 @@ def check_log(paper, main):
     record("WARN" if bad else "PASS", "overfull lines > 5pt", "%d (worst %.1fpt)" % (len(bad), max(bad)) if bad else "none")
 
 
-def check_pages(paper, main, limit):
-    aux = paper / (Path(main).stem + ".aux")
+def check_pages(build, main, limit):
+    aux = build / (Path(main).stem + ".aux")
     if not aux.exists():
         record("FAIL", "page limit", "%s not found" % aux.name)
         return
@@ -220,15 +222,17 @@ def stable_bytes(data):
 
 
 def output_tree(paper):
-    """{path: (bytes, stat)} for every file the figure and value scripts may write."""
-    files = sorted((paper / "generated").rglob("*")) + sorted((paper / "figures").rglob("*"))
+    """{path: (bytes, stat)} for every file the figure and value scripts may write, sources.md included
+    (a values script usually writes it alongside generated/values.tex)."""
+    files = sorted((paper / "generated").rglob("*")) + sorted((paper / "figures").rglob("*")) + [paper / "sources.md"]
     return {f: (f.read_bytes(), f.stat()) for f in files if f.is_file()}
 
 
 def compared(tree, paper, figures=True):
-    """The outputs the check compares: values and tables, plus the figure PDFs/PNGs unless figures=False."""
+    """The outputs the check compares: values, tables and sources.md, plus the figure PDFs/PNGs unless
+    figures=False."""
     def wanted(f):
-        return f.is_relative_to(paper / "generated") or (
+        return f.is_relative_to(paper / "generated") or f == paper / "sources.md" or (
             figures and f.parent == paper / "figures" and f.suffix in (".pdf", ".png"))
     return {f: stable_bytes(data) for f, (data, _) in tree.items() if wanted(f)}
 
@@ -502,6 +506,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("paper", type=Path)
     parser.add_argument("--main", default="main.tex")
+    parser.add_argument("--build-dir", type=Path, help="where the compile wrote main.log and main.aux "
+                                                          "(tectonic --outdir); default: the paper folder")
     parser.add_argument("--page-limit", type=int)
     parser.add_argument("--anonymous", action="store_true")
     parser.add_argument("--author", action="append", default=[], help="name, affiliation or email that must not appear")
@@ -523,8 +529,8 @@ def main():
     if args.citations_only:
         check_citations(args.paper, True, args.bib, args.citations_out)
     else:
-        check_log(args.paper, args.main)
-        check_pages(args.paper, args.main, args.page_limit)
+        check_log(args.build_dir or args.paper, args.main)
+        check_pages(args.build_dir or args.paper, args.main, args.page_limit)
         if args.anonymous:
             check_anonymity(args.paper, args.main, args.author)
         check_numbers(args.paper, args.main)
