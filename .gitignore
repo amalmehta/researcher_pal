@@ -9,3 +9,10 @@ examples/*/paper.pdf
 
 # Built site (rebuild with: python3.9 site/build_site.py)
 site/dist/
+
+# Swift build output
+app/.build/
+app/build/
+
+# Claude Code local settings (the skills themselves live in skills/)
+.claude/

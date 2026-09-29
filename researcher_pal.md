@@ -194,27 +194,34 @@ CONSTRAINTS — paper-ideas:
 
 DELIVERABLES:
 
-- .claude/skills/researcher-pal/SKILL.md — the skill: the workflow above plus tutoring rules
-- .claude/skills/researcher-pal/references/concept_graph_template.md — template for concept entries and the Mermaid diagram
-- .claude/skills/researcher-pal/references/exercise_template.md — templates for coded exercises (README, stub, tests) and worked problems
-- .claude/skills/researcher-pal/references/knowledge_graph_template.md — format and merge rules for the cross-paper knowledge graph
-- .claude/skills/researcher-pal/assets/animation_template.html — starter animation page with play/step/scrub controls, a slider and KaTeX
+- skills/researcher-pal/SKILL.md — the skill: the workflow above plus tutoring rules
+- skills/researcher-pal/references/concept_graph_template.md — template for concept entries and the Mermaid diagram
+- skills/researcher-pal/references/exercise_template.md — templates for coded exercises (README, stub, tests) and worked problems
+- skills/researcher-pal/references/knowledge_graph_template.md — format and merge rules for the cross-paper knowledge graph
+- skills/researcher-pal/assets/animation_template.html — starter animation page with play/step/scrub controls, a slider and KaTeX
 - ~/.claude/skills/researcher-pal — symlink to the skill so it works from any folder
 - examples/attention-is-all-you-need/ — a full run on the ML test paper (graph, animations, exercises, solutions)
 - examples/barabasi-albert-scaling/ — a light run on a non-ML test paper (graph, 1–2 animations, 2–3 exercises)
 - examples/knowledge_graph.md — the knowledge graph after both example runs, showing topics merged across papers
-- .claude/skills/paper-writer/SKILL.md — the paper-writer workflow (P1–P9)
-- .claude/skills/paper-writer/references/venues/<venue>.md — one profile each for NeurIPS, ICML, ICLR
-- .claude/skills/paper-writer/references/venue_profile_template.md — how to profile any venue from its CFP
-- .claude/skills/paper-writer/references/writing_guide.md — section-by-section guidance, with per-venue tone
-- .claude/skills/paper-writer/assets/figure_style.py — matplotlib helper for venue widths, fonts, palette
-- .claude/skills/paper-writer/scripts/check_paper.py — page limit, anonymity, unsourced numbers, unresolved references
+- skills/paper-writer/SKILL.md — the paper-writer workflow (P1–P9)
+- skills/paper-writer/references/venues/<venue>.md — one profile each for NeurIPS, ICML, ICLR
+- skills/paper-writer/references/venue_profile_template.md — how to profile any venue from its CFP
+- skills/paper-writer/references/writing_guide.md — section-by-section guidance, with per-venue tone
+- skills/paper-writer/assets/figure_style.py — matplotlib helper for venue widths, fonts, palette
+- skills/paper-writer/scripts/check_paper.py — page limit, anonymity, unsourced numbers, unresolved references
 - ~/.claude/skills/paper-writer — symlink to the skill so it works from any folder
 - examples/paper-toy-transformer-ablation/ — a 4-page workshop-style test paper (toy Transformer ablation: warmup and √d_k scaling, 3 seeds) produced for NeurIPS and ICLR formats
-- .claude/skills/paper-ideas/SKILL.md — the paper-ideas workflow (I1–I7)
-- .claude/skills/paper-ideas/references/idea_catalog.md — what to look for, per idea type and venue
-- .claude/skills/paper-ideas/scripts/lit_search.py — keyword search over arXiv, Semantic Scholar and Crossref, returning verified records
-- .claude/skills/paper-ideas/scripts/check_ideas.py — checks an ideas.md: complete cards, all four types, valid labels, verified cited IDs, working links
+- skills/paper-ideas/SKILL.md — the paper-ideas workflow (I1–I7)
+- skills/paper-ideas/references/idea_catalog.md — what to look for, per idea type and venue
+- skills/paper-ideas/scripts/lit_search.py — keyword search over arXiv, Semantic Scholar and Crossref, returning verified records
+- skills/paper-ideas/scripts/check_ideas.py — checks an ideas.md: complete cards, all four types, valid labels, verified cited IDs, working links
+- skills/researcher-pal/assets/animation_player.js|css — the shared animation player (skeleton, timeline, controls, drawing helpers), copied once per paper
+- tests/ — unit tests for check_paper.py, lit_search.py and check_ideas.py (37 tests)
+- tools/checks.sh, tools/run_example_tests.py — one runner for every check; CI runs the same script
+- .github/workflows/ci.yml — GitHub Actions: unit tests, ideas reports, site build, exercise suites, both paper compiles with --regenerate
+- evals/rubric.md — how researcher-pal is evaluated on papers published after the model's cutoff
+- LICENSE — MIT
+- site/build_site.py, site/dist/ — static site for browsing the examples
 - ~/.claude/skills/paper-ideas — symlink to the skill so it works from any folder
 - hooks added to paper-writer and researcher-pal SKILL.md
 - examples/paper-toy-transformer-ablation/paper/ideas/ — ideas report, one applied edit, one approved experiment folded into both venue PDFs
@@ -328,6 +335,26 @@ OPEN QUESTIONS / ASSUMPTIONS:
 - The paper-ideas trigger can't be tested from this session (`claude -p` hangs). Please confirm "suggest
   improvements for my paper" in a fresh session.
 
+OPEN QUESTIONS / ASSUMPTIONS (continued):
+
+- Evaluation (2026-09-18): three papers from August 2026 (after the model's cutoff), two conditions each
+  (with researcher-pal, and the same task with no skill), same model, paper text supplied locally. Blind AI
+  grading preferred the skill on all three (53/54 vs 40/54), with no fabrication on either side. Caveats in
+  evals/README.md: an AI grader, one run per paper, and the animations, tutor loop and knowledge graph
+  were out of scope. Early grader runs stalled on infrastructure; strict read-only, low-tool-call prompts fixed it.
+- The Attention final-exercise test asserts it trains in under 5 minutes. That fails when the machine is busy
+  (it took over 5 min while three agents and a LaTeX compile ran; 153 s on an idle machine). Run the full
+  checks when nothing else is competing for the CPU.
+- Free literature APIs: DBLP is not usable from a script (its search API serves an anti-bot HTML page), so
+  paper-ideas searches OpenAlex, Crossref, arXiv and Semantic Scholar, and caches successes on disk.
+- The python.org Python 3.9 on this Mac has an empty CA store, so every HTTPS call from it failed. Both
+  scripts now fall back to the system certificate store (or certifi) with verification still on.
+- Figure builds are deterministic: make_all.py pins SOURCE_DATE_EPOCH, so check_paper.py --regenerate can
+  compare rebuilt figures byte for byte. A different matplotlib version still produces different bytes, so
+  pass --python <the project's interpreter>.
+- Figure scripts are shared by every venue (paper/figures_scripts/) and take the venue folder from
+  $VENUE_DIR; venue_config.py is gone. Animations share _player.js/_player.css per paper.
+
 CHANGELOG:
 
 - 2026-09-15 — created
@@ -351,3 +378,8 @@ CHANGELOG:
   existing examples
 - 2026-09-15 — kept the toy paper's revised warmup claim (confirmed by you); added check_ideas.py to
   paper-ideas (approved), run before the I5 pause
+- 2026-09-18 — hardening pass after review: evaluation on three post-cutoff papers (evals/); check_paper.py
+  --regenerate proves figures and values still come from the data; figure scripts de-duplicated into one
+  shared folder per paper and animations into one shared player; lit_search.py gained OpenAlex, disk caching,
+  Retry-After backoff and optional API keys (DBLP dropped); unit tests, tools/checks.sh, GitHub Actions CI
+  and an MIT LICENSE added
