@@ -28,8 +28,19 @@ final class ClaudeRunner: ObservableObject {
     @Published private(set) var needsLogin = false
     @Published private(set) var lastError: String?
 
-    private var process: Process?
-    private var buffer = ""
+    /// One claude process. Output is kept as bytes until a whole line has arrived: a pipe read can end in the
+    /// middle of a multi-byte character, and decoding that piece on its own would lose it.
+    private struct Run {
+        let id = UUID()
+        let process: Process
+        var out = Data()
+        var err = Data()
+        var openStreams = 2
+        var exitStatus: Int32?
+    }
+
+    /// The run in progress. Callbacks carry their run's id, so a stopped run's late output and exit are ignored.
+    private var current: Run?
 
     var canReply: Bool { !isRunning && sessionID != nil }
 
@@ -54,8 +65,8 @@ final class ClaudeRunner: ObservableObject {
     }
 
     func stop() {
-        process?.terminate()
-        process = nil
+        current?.process.terminate()
+        current = nil
         isRunning = false
     }
 
@@ -76,7 +87,6 @@ final class ClaudeRunner: ObservableObject {
         append(Item(kind: .user, text: prompt, label: label))
         isRunning = true
         lastError = nil
-        buffer = ""
 
         var arguments = ["-p", prompt,
                          "--output-format", "stream-json", "--verbose",
@@ -93,8 +103,11 @@ final class ClaudeRunner: ObservableObject {
             arguments += ["--resume", resume]
         }
 
-        // A login shell so the app picks up the same PATH (and therefore the same `claude`) as Terminal.
-        let command = (["claude"] + arguments).map(Self.quote).joined(separator: " ")
+        // A login shell so the app picks up the same PATH (and therefore the same `claude`) as Terminal. `exec`
+        // makes claude replace the shell, so Stop terminates claude itself rather than only its parent shell.
+        // RESEARCHER_PAL_CLAUDE points at a specific binary instead.
+        let claude = ProcessInfo.processInfo.environment["RESEARCHER_PAL_CLAUDE"] ?? "claude"
+        let command = "exec " + ([claude] + arguments).map(Self.quote).joined(separator: " ")
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/zsh")
         task.arguments = ["-lc", command]
@@ -104,43 +117,80 @@ final class ClaudeRunner: ObservableObject {
         task.standardOutput = out
         task.standardError = err
 
-        out.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let chunk = handle.availableData
-            guard !chunk.isEmpty, let text = String(data: chunk, encoding: .utf8) else { return }
-            Task { @MainActor in self?.consume(text) }
-        }
-        err.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let chunk = handle.availableData
-            guard !chunk.isEmpty, let text = String(data: chunk, encoding: .utf8) else { return }
-            Task { @MainActor in self?.consumeError(text) }
+        let run = Run(process: task)
+        let id = run.id
+        // The main queue is FIFO, so chunks are handled in the order they were read. An empty read is end of
+        // file: remove the handler there, or Foundation keeps calling it with empty data.
+        for (pipe, isError) in [(out, false), (err, true)] {
+            pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+                let chunk = handle.availableData
+                if chunk.isEmpty { handle.readabilityHandler = nil }
+                DispatchQueue.main.async {
+                    MainActor.assumeIsolated { self?.received(chunk, isError: isError, run: id) }
+                }
+            }
         }
         task.terminationHandler = { [weak self] finished in
-            Task { @MainActor in self?.finish(status: finished.terminationStatus) }
+            let status = finished.terminationStatus
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self?.exited(status: status, run: id) }
+            }
         }
 
         do {
+            current = run
             try task.run()
-            process = task
         } catch {
+            current = nil
+            out.fileHandleForReading.readabilityHandler = nil
+            err.fileHandleForReading.readabilityHandler = nil
             isRunning = false
             lastError = "Could not start claude: \(error.localizedDescription)"
             append(Item(kind: .error, text: lastError!))
         }
     }
 
-    private func consume(_ text: String) {
-        buffer += text
-        while let newline = buffer.firstIndex(of: "\n") {
-            let line = String(buffer[buffer.startIndex..<newline])
-            buffer = String(buffer[buffer.index(after: newline)...])
-            handle(line: line.trimmingCharacters(in: .whitespaces))
+    private func received(_ chunk: Data, isError: Bool, run id: UUID) {
+        guard var run = current, run.id == id else { return }
+        if chunk.isEmpty {
+            run.openStreams -= 1
+        } else if isError {
+            run.err.append(chunk)
+        } else {
+            run.out.append(chunk)
         }
+        // Whole lines only; at end of file, whatever is left is the last line.
+        let lines = isError ? Self.takeLines(from: &run.err, all: chunk.isEmpty)
+                            : Self.takeLines(from: &run.out, all: chunk.isEmpty)
+        current = run
+        if isError {
+            let text = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !text.isEmpty { append(Item(kind: .error, text: text)) }
+        } else {
+            lines.forEach { handle(line: $0.trimmingCharacters(in: .whitespaces)) }
+        }
+        finishIfDone()
     }
 
-    private func consumeError(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        append(Item(kind: .error, text: trimmed))
+    private func exited(status: Int32, run id: UUID) {
+        guard current?.id == id else { return }
+        current?.exitStatus = status
+        finishIfDone()
+    }
+
+    /// Splits complete lines off the front of `buffer`, decoding each one whole. With `all`, the unterminated
+    /// rest counts as a line too.
+    private static func takeLines(from buffer: inout Data, all: Bool) -> [String] {
+        var lines: [String] = []
+        while let newline = buffer.firstIndex(of: UInt8(ascii: "\n")) {
+            lines.append(String(decoding: buffer[buffer.startIndex..<newline], as: UTF8.self))
+            buffer.removeSubrange(buffer.startIndex...newline)
+        }
+        if all, !buffer.isEmpty {
+            lines.append(String(decoding: buffer, as: UTF8.self))
+            buffer.removeAll()
+        }
+        return lines
     }
 
     private func handle(line: String) {
@@ -178,9 +228,12 @@ final class ClaudeRunner: ObservableObject {
         }
     }
 
-    private func finish(status: Int32) {
+    /// A run is over once the process has exited and both pipes have been read to the end, so the last lines
+    /// of output (usually the result) are always shown before the run is marked finished.
+    private func finishIfDone() {
+        guard let run = current, run.openStreams == 0, let status = run.exitStatus else { return }
+        current = nil
         isRunning = false
-        process = nil
         if status != 0 && status != 15 && !needsLogin {
             lastError = "The assistant exited with status \(status)"
             append(Item(kind: .error, text: lastError!))
