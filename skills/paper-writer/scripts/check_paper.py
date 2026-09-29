@@ -201,10 +201,9 @@ def strip_volatile(data):
     return data
 
 
-def stable_bytes(path):
+def stable_bytes(data):
     """File contents with per-run timestamps removed, so two runs of the same script compare equal.
     PDF streams are decompressed first: Cairo (Graphviz, rsvg-convert) hides its /CreationDate inside one."""
-    data = path.read_bytes()
     if not data.startswith(b"%PDF"):
         return strip_volatile(data)
     parts, pos = [], 0
@@ -220,11 +219,35 @@ def stable_bytes(path):
     return b"".join(parts)
 
 
-def generated_files(paper, figures=True):
-    files = sorted((paper / "generated").rglob("*"))
-    if figures:
-        files += sorted((paper / "figures").glob("*.pdf")) + sorted((paper / "figures").glob("*.png"))
-    return {f: stable_bytes(f) for f in files if f.is_file()}
+def output_tree(paper):
+    """{path: (bytes, stat)} for every file the figure and value scripts may write."""
+    files = sorted((paper / "generated").rglob("*")) + sorted((paper / "figures").rglob("*"))
+    return {f: (f.read_bytes(), f.stat()) for f in files if f.is_file()}
+
+
+def compared(tree, paper, figures=True):
+    """The outputs the check compares: values and tables, plus the figure PDFs/PNGs unless figures=False."""
+    def wanted(f):
+        return f.is_relative_to(paper / "generated") or (
+            figures and f.parent == paper / "figures" and f.suffix in (".pdf", ".png"))
+    return {f: stable_bytes(data) for f, (data, _) in tree.items() if wanted(f)}
+
+
+def restore_tree(paper, snapshot):
+    """Put generated/ and figures/ back exactly as they were, timestamps included, so the check never leaves
+    rewritten files behind (or makes a build tool think the paper needs recompiling)."""
+    for f in output_tree(paper):
+        if f not in snapshot:
+            f.unlink()
+    for f, (data, st) in snapshot.items():
+        if not f.is_file() or f.read_bytes() != data:
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_bytes(data)
+        os.utime(f, ns=(st.st_atime_ns, st.st_mtime_ns))
+    for root in (paper / "generated", paper / "figures"):
+        for d in sorted((d for d in root.rglob("*") if d.is_dir()), key=lambda d: len(d.parts), reverse=True):
+            if not any(d.iterdir()) and not any(f.is_relative_to(d) for f in snapshot):
+                d.rmdir()
 
 
 def check_regenerated(paper, python=None, compare_figures=True):
@@ -236,28 +259,35 @@ def check_regenerated(paper, python=None, compare_figures=True):
     if make_all is None:
         record("WARN", "figures and values match the data", "no make_all.py found; skipped")
         return
-    before = generated_files(paper, compare_figures)
+    snapshot = output_tree(paper)
+    before = compared(snapshot, paper, compare_figures)
     if not before:
         record("WARN", "figures and values match the data", "nothing generated yet; skipped")
         return
     env = dict(os.environ, SOURCE_DATE_EPOCH="0", VENUE_DIR=str(paper.resolve()), MPLBACKEND="Agg", PYTHONWARNINGS="ignore")
     make_all = make_all.resolve()
+    # The scripts write into the paper folder itself (they may find their data relative to where they live, so
+    # they can't be pointed at a copy); whatever happens, the folder is restored afterwards.
     try:
-        done = subprocess.run([python or sys.executable, "-W", "ignore", str(make_all), str(paper.resolve())],
-                              cwd=str(make_all.parent), env=env, capture_output=True, text=True, timeout=900)
-    except (OSError, subprocess.SubprocessError) as exc:
-        record("FAIL", "figures and values match the data", "could not run %s: %s" % (make_all.name, exc))
-        return
-    if done.returncode != 0:
-        tail = (done.stderr or done.stdout or "").strip().splitlines()[-3:]
-        record("FAIL", "figures and values match the data", "%s failed: %s" % (make_all.name, " / ".join(tail)))
-        return
-    after = generated_files(paper, compare_figures)
+        try:
+            done = subprocess.run([python or sys.executable, "-W", "ignore", str(make_all), str(paper.resolve())],
+                                  cwd=str(make_all.parent), env=env, capture_output=True, text=True, timeout=900)
+        except (OSError, subprocess.SubprocessError) as exc:
+            record("FAIL", "figures and values match the data", "could not run %s: %s" % (make_all.name, exc))
+            return
+        if done.returncode != 0:
+            tail = (done.stderr or done.stdout or "").strip().splitlines()[-3:]
+            record("FAIL", "figures and values match the data", "%s failed: %s" % (make_all.name, " / ".join(tail)))
+            return
+        after = compared(output_tree(paper), paper, compare_figures)
+    finally:
+        restore_tree(paper, snapshot)
     changed = sorted(str(f.relative_to(paper)) for f in set(before) | set(after) if before.get(f) != after.get(f))
     record("FAIL" if changed else "PASS", "figures and values match the data",
-           ("regenerating changed %d file(s): %s. Either the paper was built from stale data (regenerate and "
-            "recompile), or the figures were built by a different Python/matplotlib than %s (pass --python)."
-            % (len(changed), ", ".join(changed[:6]), Path(python or sys.executable).name)) if changed
+           ("regenerating changed %d file(s): %s. Either the paper was built from stale data (run %s, then "
+            "recompile), or the figures were built by a different Python/matplotlib than %s (pass --python). "
+            "The paper's files were left as they were."
+            % (len(changed), ", ".join(changed[:6]), make_all.name, Path(python or sys.executable).name)) if changed
            else "%d generated files reproduce exactly from the data%s"
            % (len(after), "" if compare_figures else " (figures rebuilt, not compared: --no-figure-compare)"))
 

@@ -1,4 +1,6 @@
 """Unit tests for paper-writer's check_paper.py (offline parts only; citation lookups need the network)."""
+import os
+
 import check_paper as cp
 import pytest
 
@@ -125,3 +127,86 @@ def test_check_anonymity_passes_on_clean_text(tmp_path):
 
 def test_strip_comments_keeps_escaped_percent():
     assert cp.strip_comments("accuracy 99.8\\% % a comment\n").strip() == "accuracy 99.8\\%"
+
+
+# ---------------------------------------------------------------- regenerate check
+def regen_paper(tmp_path, script):
+    """A venue folder with committed outputs and a make_all.py that does whatever `script` says."""
+    paper = tmp_path / "venue"
+    (paper / "generated" / "tables").mkdir(parents=True)
+    (paper / "figures" / "src").mkdir(parents=True)
+    (paper / "main.tex").write_text("\\documentclass{article}")
+    (paper / "generated" / "values.tex").write_text("\\newcommand{\\valSteps}{1500}\n")
+    (paper / "generated" / "tables" / "results.tex").write_text("0.42\n")
+    (paper / "figures" / "loss.pdf").write_bytes(b"%PDF-1.4 figure\n")
+    (paper / "figures" / "src" / "loss.svg").write_text("<svg/>")
+    scripts = paper / "figures" / "scripts"
+    scripts.mkdir()
+    (scripts / "make_all.py").write_text("import sys\nfrom pathlib import Path\nv = Path(sys.argv[1])\n" + script)
+    return paper
+
+
+def tree(paper):
+    return {str(f.relative_to(paper)): (f.read_bytes(), f.stat().st_mtime_ns)
+            for f in sorted(paper.rglob("*")) if f.is_file()}
+
+
+def rewrite(paper):
+    # Push every existing file's mtime into the past, so a rewrite by the scripts would show up.
+    for f in paper.rglob("*"):
+        if f.is_file():
+            os.utime(f, ns=(10**18, 10**18))
+
+
+REWRITES_SAME = """
+(v / "generated" / "values.tex").write_text("\\\\newcommand{\\\\valSteps}{1500}\\n")
+(v / "generated" / "tables" / "results.tex").write_text("0.42\\n")
+(v / "figures" / "loss.pdf").write_bytes(b"%PDF-1.4 figure\\n")
+(v / "figures" / "src" / "loss.svg").write_text("<svg/>")
+"""
+
+STALE = """
+(v / "generated" / "tables" / "results.tex").write_text("0.99\\n")
+(v / "figures" / "src" / "extra").mkdir()
+(v / "figures" / "src" / "extra" / "new.dot").write_text("digraph {}")
+"""
+
+
+def test_regenerate_passes_and_leaves_the_folder_untouched(tmp_path):
+    paper = regen_paper(tmp_path, REWRITES_SAME)
+    rewrite(paper)
+    original = tree(paper)
+    cp.check_regenerated(paper)
+    assert statuses()["figures and values match the data"][0] == "PASS"
+    assert tree(paper) == original
+
+
+def test_regenerate_fails_on_stale_table_and_restores_everything(tmp_path):
+    paper = regen_paper(tmp_path, STALE)
+    rewrite(paper)
+    original = tree(paper)
+    cp.check_regenerated(paper)
+    status, detail = statuses()["figures and values match the data"]
+    assert status == "FAIL" and "generated/tables/results.tex" in detail
+    assert tree(paper) == original
+    assert not (paper / "figures" / "src" / "extra").exists()
+
+
+def test_regenerate_restores_after_the_scripts_crash(tmp_path):
+    paper = regen_paper(tmp_path, STALE + "raise SystemExit('boom')\n")
+    rewrite(paper)
+    original = tree(paper)
+    cp.check_regenerated(paper)
+    status, detail = statuses()["figures and values match the data"]
+    assert status == "FAIL" and "boom" in detail
+    assert tree(paper) == original
+
+
+def test_regenerate_can_skip_comparing_figures(tmp_path):
+    paper = regen_paper(tmp_path, REWRITES_SAME + '(v / "figures" / "loss.pdf").write_bytes(b"%PDF-1.4 other\\n")\n')
+    cp.check_regenerated(paper, compare_figures=False)
+    assert statuses()["figures and values match the data"][0] == "PASS"
+    cp.RESULTS.clear()
+    cp.check_regenerated(paper)
+    status, detail = statuses()["figures and values match the data"]
+    assert status == "FAIL" and "figures/loss.pdf" in detail
