@@ -51,8 +51,10 @@ jobs:
           set -e
           for venue in neurips2026 iclr2027; do
             dir="examples/paper-toy-transformer-ablation/paper/$venue"
-            (cd "$dir" && tectonic -Z search-path=template main.tex --keep-logs --keep-intermediates)
-            python skills/paper-writer/scripts/check_paper.py "$dir" \
+            build="$RUNNER_TEMP/$venue"
+            mkdir -p "$build"
+            (cd "$dir" && tectonic -Z search-path=template main.tex --keep-logs --keep-intermediates --outdir "$build")
+            python skills/paper-writer/scripts/check_paper.py "$dir" --build-dir "$build" \
               --page-limit 4 --anonymous --regenerate --no-figure-compare --python python
           done
       # The committed figures were built on macOS; Linux fonts, Graphviz and Cairo can't match them byte for
