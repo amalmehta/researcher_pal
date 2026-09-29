@@ -2,6 +2,8 @@
 
 Three [Claude Code](https://claude.com/claude-code) skills for working with research papers.
 
+<p align="center"><img src="docs/attention-animation.png" alt="One of the interactive animations the researcher-pal skill builds: scaled dot-product attention from Attention Is All You Need, step by step, with sliders" width="600"></p>
+
 | Skill | What it does | Try saying |
 |---|---|---|
 | **researcher-pal** | Teaches you a paper: a concept map, interactive animations, and exercises that rebuild the method | "help me learn arXiv 1706.03762" |
