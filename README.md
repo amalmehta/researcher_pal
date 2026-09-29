@@ -14,7 +14,7 @@ Three [Claude Code](https://claude.com/claude-code) skills for working with rese
 2. Link the skills so Claude Code can use them from any folder:
 
    ```bash
-   for s in researcher-pal paper-writer paper-ideas; do ln -s "$PWD/.claude/skills/$s" ~/.claude/skills/$s; done
+   mkdir -p ~/.claude/skills && for s in researcher-pal paper-writer paper-ideas; do ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s; done
    ```
 
 3. Open Claude Code and say one of the phrases above.
@@ -28,13 +28,18 @@ Three [Claude Code](https://claude.com/claude-code) skills for working with rese
 
 | Folder | Contents |
 |---|---|
-| `.claude/skills/` | The three skills |
+| `skills/` | The three skills, linked into ~/.claude/skills by the install step |
 | `examples/attention-is-all-you-need/` | A full learning run: concept map, 4 animations, 12 exercises |
 | `examples/barabasi-albert-scaling/` | A learning run on a non-ML paper, plus improvement ideas and an experiment |
 | `examples/paper-toy-transformer-ablation/` | A short example paper built for NeurIPS and ICLR, plus improvement ideas and an experiment |
 | `examples/knowledge_graph.md` | Topics learned across both papers |
+| `app/` | The Mac app: drop a paper in and study it |
 | `site/` | A static site for browsing the examples |
+| `tests/`, `tools/` | Unit tests for the skills' scripts, and the check runner |
+| `evals/` | How the learning skill is evaluated against papers it has never seen |
 | `researcher_pal.md` | The full spec and changelog |
+
+MIT licensed (see `LICENSE`). The papers' own text belongs to their authors.
 
 The example papers' PDFs aren't included. Download them from arXiv:
 [1706.03762](https://arxiv.org/abs/1706.03762) and [cond-mat/9910332](https://arxiv.org/abs/cond-mat/9910332).
@@ -46,6 +51,19 @@ python3.9 site/build_site.py
 ```
 
 Then run `python3 -m http.server 8765` and open http://localhost:8765/site/dist/index.html.
+
+## Checks
+
+Everything the repo can verify runs from one script (CI runs the same one):
+
+```bash
+tools/checks.sh
+```
+
+It runs the unit tests for the skills' scripts, checks both example idea reports, builds the site, runs the
+exercise tests (the stubs must fail and the reference solutions must pass), compiles both example papers and
+re-runs every figure and value script to confirm the papers still match their data. `tools/checks.sh --quick`
+skips the paper compile and the PyTorch exercises.
 
 ## Good to know
 

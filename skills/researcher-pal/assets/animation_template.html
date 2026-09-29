@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Animation template for researcher-pal. Copy to papers/<slug>/animations/<concept-id>.html and edit
+  only the block below: CONFIG, PARAMS, STEPS and draw(). Everything else (page skeleton, timeline,
+  controls, keyboard, KaTeX, drawing helpers) lives in _player.js, shared by this paper's animations.
+
+  Copy assets/animation_player.js -> animations/_player.js and assets/animation_player.css ->
+  animations/_player.css once per paper, then one HTML file per animation.
+
+  Available inside draw({ S, C, step, p, raw, params, lerp, clamp, smooth, during, fmt, mix }):
+    S.group/line/rect/circle/path/text/tex/plot/matrix/arrow  - SVG helpers, each taking an options object
+    C.bg/ink/dim/line/blue/yellow/green/red/purple/orange/teal - the palette
+    during(p, a, b) - progress of a sub-animation inside a step; fmt(x, digits) - number formatting
+  See _player.js for the exact helper signatures.
+-->
+<title>Animation title · researcher-pal</title>
+<link rel="stylesheet" href="_player.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<script>
+/* ===================== THIS ANIMATION =====================
+   CONFIG, PARAMS, STEPS and draw() are all this page defines; _player.js does everything else. */
+
+const CONFIG = {
+  title: "Softmax with temperature",
+  source: "Template demo. Replace with: <Paper title>, §x.y, Eq. (n)",
+  // TeX for the Equation card. Color symbols to match the drawing (C.* below).
+  equation: String.raw`\mathrm{softmax}(z/{\color{#f4d35e}T})_i = \dfrac{e^{z_i/{\color{#f4d35e}T}}}{\sum_j e^{z_j/{\color{#f4d35e}T}}}`,
+  notes: [
+    "The ranking of the options never changes; only how peaked the distribution is.",
+    "Small T → almost one-hot. Large T → almost uniform.",
+  ],
+};
+
+// Sliders for real quantities from the paper. draw() reads params[id].
+// Set value to the paper's value and say so in help; paperValue adds a reset link.
+const PARAMS = [
+  { id: "T", label: "Temperature T", min: 0.2, max: 5, step: 0.1, value: 1, paperValue: 1,
+    help: "Replace with a quantity from the paper, defaulting to the paper's value." },
+];
+
+// One idea per step. Captions support inline TeX between $…$. Durations are seconds.
+const STEPS = [
+  { caption: "Start with raw scores (logits) $z$ for four options. They can be any real number.", duration: 2.5 },
+  { caption: "Divide by the temperature ${\\color{#f4d35e}T}$. Try the slider: small $T$ stretches the gaps, large $T$ squashes them.", duration: 3 },
+  { caption: "Exponentiate. Everything becomes positive, and the biggest score pulls far ahead.", duration: 3 },
+  { caption: "Divide by the total so the bars sum to 1. That's the softmax.", duration: 3 },
+];
+
+// Draw one frame. Called on every tick, slider move and scrub, so the picture is a pure
+// function of (step, p, params).
+//   step: current step index · p: eased progress 0→1 within the step (raw = linear)
+//   S: drawing helpers (see "Drawing helpers" below) · C: palette
+//   lerp, clamp, smooth, during(p, a, b), fmt(x, digits), mix(colorA, colorB, t)
+function draw({ S, C, step, p, params, lerp, fmt }) {
+  const z = [2.0, 1.0, 0.1, -1.0];
+  const labels = ["cat", "dog", "car", "sky"];
+  const T = params.T;
+  const exps = z.map(v => Math.exp(v / T));
+  const total = exps.reduce((a, b) => a + b, 0);
+  const stages = [
+    { name: "logits  z", vals: z },
+    { name: "z / T", vals: z.map(v => v / T) },
+    { name: "exp(z / T)", vals: exps },
+    { name: "softmax(z / T)", vals: exps.map(v => v / total) },
+  ];
+  // Stages 0–1 share a scale so dividing by T visibly stretches or squashes the bars;
+  // exp gets its own; probabilities use an absolute scale (1.0 = full height).
+  const m01 = Math.max(...z.map(Math.abs), ...stages[1].vals.map(Math.abs));
+  const scale = [m01, m01, Math.max(...exps), 1];
+  const H = 140;
+  const heights = stages.map((s, k) => s.vals.map(v => (v / scale[k]) * H));
+  const from = step === 0 ? z.map(() => 0) : heights[step - 1];
+  const shown = step === 0 || p > 0.5 ? stages[step] : stages[step - 1];
+
+  const baseY = 240, x0 = 220, gap = 120, w = 70;
+  S.text(400, 48, shown.name, { size: 26, fill: C.yellow, anchor: "middle" });
+  if (step === 3) S.text(760, 48, "sum = " + fmt(shown.vals.reduce((a, b) => a + b, 0)), { size: 16, fill: C.dim, anchor: "end" });
+  S.line(130, baseY, 670, baseY, { stroke: C.dim, width: 1.5 });
+
+  heights[step].forEach((target, i) => {
+    const h = lerp(from[i], target, p);
+    const x = x0 + i * gap;
+    S.rect(x - w / 2, h >= 0 ? baseY - h : baseY, w, Math.abs(h), { fill: h >= 0 ? C.blue : C.red, opacity: 0.85, rx: 4 });
+    S.text(x, h >= 0 ? baseY - h - 10 : baseY - h + 24, fmt(shown.vals[i]), { size: 18, anchor: "middle" });
+    S.text(x, 432, labels[i], { size: 16, fill: C.dim, anchor: "middle" });
+  });
+}
+</script>
+<script defer src="_player.js"></script>
+</body>
+</html>

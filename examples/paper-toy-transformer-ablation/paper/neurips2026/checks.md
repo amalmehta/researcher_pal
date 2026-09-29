@@ -10,5 +10,6 @@
 | ✅ PASS | numbers in prose are sourced | all listed in sources.md |
 | ✅ PASS | value macros | 50 macros, all defined and listed |
 | ✅ PASS | figures have scripts | all figures have a generating script |
-| ✅ PASS | citations | 6 entries (run with --verify-citations to check them online) |
+| ✅ PASS | figures and values match the data | 4 generated files reproduce exactly from the data |
+| ✅ PASS | citations verified | 6/6 verified |
 | ⚠️ WARN | open TODOs | checklist.tex: confirm that the hyperparameters were fixed in advance and not tuned, ; checklist.tex: decide whether to cite PyTorch and its license; the architecture, opti; checklist.tex: unanswered checklist item |

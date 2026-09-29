@@ -151,12 +151,22 @@ def render_md(text, doc_path, case, tab, prefix, strip_h1=False, demote=0):
     return body
 
 
-def copy_animation(case, src):
-    text = src.read_text()
+def katex_for_artifact(text):
+    """The artifact host allows scripts from cdnjs but blocks external stylesheets, so drop KaTeX's CSS and
+    render to MathML, which browsers style themselves."""
     text = re.sub(r'\s*<link rel="stylesheet" href="https://cdn\.jsdelivr\.net/npm/katex[^>]*>', "", text)
     text = re.sub(r'<script defer src="https://cdn\.jsdelivr\.net/npm/katex[^"]*"[^>]*></script>',
                   '<script defer src="%s"></script>' % KATEX_JS, text)
-    text = text.replace("throwOnError: false", 'throwOnError: false, output: "mathml"')
+    return text.replace("throwOnError: false", 'throwOnError: false, output: "mathml"')
+
+
+def copy_animation(case, src):
+    """One page per animation; the shared player (_player.js/_player.css) is copied once alongside them."""
+    for shared in ("_player.js", "_player.css"):
+        target = DIST / "anim" / shared
+        if not target.exists():
+            target.write_text(katex_for_artifact((src.parent / shared).read_text()))
+    text = katex_for_artifact(src.read_text())
     assert "jsdelivr" not in text, src
     name = "%s-%s.html" % (case, src.stem)
     (DIST / "anim" / name).write_text(text)
