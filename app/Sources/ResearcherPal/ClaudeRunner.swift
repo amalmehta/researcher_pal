@@ -317,11 +317,15 @@ final class ClaudeRunner: ObservableObject {
     private func ask(_ requestID: String, _ request: [String: Any]) {
         let tool = request["tool_name"] as? String ?? "tool"
         let input = request["input"] as? [String: Any] ?? [:]
+        // The title is the app's own plain question; the assistant's explanation (the CLI's description, or
+        // the command's) goes underneath, once.
+        let summary = Self.summary(tool: tool, input: input, display: request["display_name"] as? String)
+        let explanation = (request["description"] as? String) ?? (input["description"] as? String)
         let pending = PermissionRequest(
             id: requestID,
-            title: request["description"] as? String ?? Self.title(tool: tool, input: input),
-            summary: Self.summary(tool: tool, input: input, display: request["display_name"] as? String),
-            detail: tool == "Bash" ? input["description"] as? String : nil,
+            title: Self.title(tool: tool, input: input),
+            summary: summary,
+            detail: explanation == summary ? nil : explanation,
             tool: tool, input: input)
         if allowAll {
             respond(to: pending, allow: true, wasAsked: false)
