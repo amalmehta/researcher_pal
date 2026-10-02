@@ -216,8 +216,12 @@ DELIVERABLES:
 - skills/paper-ideas/scripts/lit_search.py — keyword search over arXiv, Semantic Scholar and Crossref, returning verified records
 - skills/paper-ideas/scripts/check_ideas.py — checks an ideas.md: complete cards, all four types, valid labels, verified cited IDs, working links
 - skills/researcher-pal/assets/animation_player.js|css — the shared animation player (skeleton, timeline, controls, drawing helpers), copied once per paper
-- tests/ — unit tests for check_paper.py, lit_search.py and check_ideas.py (37 tests)
-- tools/checks.sh, tools/run_example_tests.py — one runner for every check; CI runs the same script
+- skills/researcher-pal/scripts/pdf_pages.py (+ pdf_pages.swift) — renders paper pages to PNG and extracts text with
+  page markers (macOS PDFKit, or poppler), so equations are read from the page; --bands zooms into dense math
+- skills/researcher-pal/scripts/check_learning.py (+ animation_check.js) — checks a paper folder with no browser:
+  concept graph structure, every animation run headless, every exercise's stub failing and solution passing
+- tests/ — unit tests for check_paper.py, lit_search.py, check_ideas.py, pdf_pages.py and check_learning.py (68 tests)
+- tools/checks.sh — one runner for every check; CI runs the same script
 - .github/workflows/ci.yml — GitHub Actions: unit tests, ideas reports, site build, exercise suites, both paper compiles with --regenerate
 - evals/rubric.md — how researcher-pal is evaluated on papers published after the model's cutoff
 - LICENSE — MIT
@@ -298,9 +302,10 @@ OPEN QUESTIONS / ASSUMPTIONS:
   The in-app browser can't run scripts on file:// pages, so the Mermaid and
   animation checks use http://localhost. The browser pane also pauses animation
   frames when hidden, so the animation checker drives each page's clock directly.
-- Proposal (not done): bundle the Mermaid-check page generator and the animation
-  checker as scripts inside the skill, so each run reuses them instead of
-  rewriting them.
+- Done 2026-10-02 (was a proposal): the Mermaid and animation checks are bundled in the skill as
+  check_learning.py, which needs no browser. It checks the template's Mermaid rules (it is not a full
+  Mermaid parser, so a browser render stays the final word when one is available) and runs each animation
+  headless under node or JavaScriptCore.
 - paper-writer example: the researcher's inputs (notes, rough draft, .bib) are
   simulated and marked as such; the results are real runs of the Attention example
   code. It is a format and workflow test, not a submission.
@@ -319,7 +324,8 @@ OPEN QUESTIONS / ASSUMPTIONS:
 - Each example venue folder keeps compile intermediates (main.aux/.log/.bbl, compile.out, checks.md),
   because check_paper.py reads them.
 - Proposal (not done; declined for now on 2026-09-15): bundle the PDF page renderer used for the P7 visual review as a skill
-  script. The same applies to the Mermaid and animation checkers proposed above.
+  script. researcher-pal now has its own page renderer (pdf_pages.py, for reading papers); paper-writer's P7 review
+  could reuse it.
 - paper-ideas uses a fourth literature label, `not applicable (presentation)`, for writing-only ideas.
   The spec's three labels are about novelty, which a wording or figure fix doesn't have.
 - Literature services during the example runs (2026-09-15): Crossref answered every query, Semantic Scholar
@@ -383,3 +389,8 @@ CHANGELOG:
   shared folder per paper and animations into one shared player; lit_search.py gained OpenAlex, disk caching,
   Retry-After backoff and optional API keys (DBLP dropped); unit tests, tools/checks.sh, GitHub Actions CI
   and an MIT LICENSE added
+- 2026-10-02 — reading and checking: researcher-pal reads equations from rendered pages or the LaTeX source,
+  never from extracted text, which drops minus signs and flattens exponents (pdf_pages.py); check_learning.py
+  checks concept graphs, animations and exercises without a browser and replaces tools/run_example_tests.py,
+  which accepted test files that couldn't be collected. The Mac app now answers the CLI's permission requests
+  (Allow / Allow all / Deny cards), so the skills' commands can run from it.
