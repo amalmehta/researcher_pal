@@ -1,6 +1,6 @@
 # File structure
 
-[← Back to the README](../README.md) · [Instructions](INSTRUCTIONS.md)
+[← Back to the README](../README.md) · [Instructions](INSTRUCTIONS.md) · [System design](SYSTEM-DESIGN.md)
 
 | Folder | Contents |
 |---|---|
@@ -14,6 +14,7 @@
 | `tests/`, `tools/` | Unit tests for the skills' scripts, and the check runner |
 | `evals/` | How the learning skill is evaluated against papers it has never seen |
 | `researcher_pal.md` | The full spec and changelog |
+| `docs/SYSTEM-DESIGN.md` | How the skills, scripts, Mac app and site fit together |
 
 MIT licensed (see `LICENSE`). The papers' own text belongs to their authors.
 
