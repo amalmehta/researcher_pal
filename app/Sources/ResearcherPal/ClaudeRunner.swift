@@ -2,6 +2,11 @@ import Foundation
 
 /// Drives the `claude` CLI that is already installed on this Mac, in headless streaming mode, and turns its
 /// NDJSON output into a transcript. No API key: it uses the CLI's own login.
+///
+/// The app is the CLI's permission host (`--permission-prompt-tool stdio`): when the assistant wants to do
+/// something that needs approval (run a command, write outside the paper's folder), the CLI asks over stdin/stdout
+/// and the app shows the request. Without a host, a headless CLI denies every such request on its own, so the
+/// skills could not download a paper, extract its text or run an exercise's tests.
 @MainActor
 final class ClaudeRunner: ObservableObject {
     struct Item: Identifiable {
@@ -17,9 +22,27 @@ final class ClaudeRunner: ObservableObject {
     struct Settings {
         var model: String = "opus"
         var permissionMode: String = "acceptEdits"
-        var allowCommands: Bool = true
+        var commands: CommandPolicy = .ask
         var maxBudgetUSD: Double = 10
+        /// Folders outside the paper's own that the assistant may write without asking (the knowledge graph's).
+        var extraDirectories: [URL] = []
     }
+
+    enum CommandPolicy: String, CaseIterable {
+        case ask, always, never
+    }
+
+    /// Something the assistant is waiting for the user to allow or deny.
+    struct PermissionRequest: Identifiable {
+        let id: String              // the CLI's request_id
+        let title: String
+        let summary: String         // the command, file or URL, shown verbatim
+        let detail: String?         // the assistant's own explanation, when it gave one
+        let tool: String
+        fileprivate let input: [String: Any]
+    }
+
+    enum Decision { case allow, allowAll, deny }
 
     @Published private(set) var items: [Item] = []
     @Published private(set) var isRunning = false
@@ -27,12 +50,17 @@ final class ClaudeRunner: ObservableObject {
     @Published private(set) var costUSD: Double = 0
     @Published private(set) var needsLogin = false
     @Published private(set) var lastError: String?
+    @Published private(set) var permissionRequests: [PermissionRequest] = []
+
+    /// "Allow all" lasts for the rest of the conversation, replies included, and ends with clear().
+    private var allowAll = false
 
     /// One claude process. Output is kept as bytes until a whole line has arrived: a pipe read can end in the
     /// middle of a multi-byte character, and decoding that piece on its own would lose it.
     private struct Run {
         let id = UUID()
         let process: Process
+        let input: FileHandle
         var out = Data()
         var err = Data()
         var openStreams = 2
@@ -44,12 +72,20 @@ final class ClaudeRunner: ObservableObject {
 
     var canReply: Bool { !isRunning && sessionID != nil }
 
+    init() {
+        // Answering a CLI that has just exited writes to a closed pipe. Ignore SIGPIPE so that write fails
+        // quietly instead of the signal killing the app.
+        signal(SIGPIPE, SIG_IGN)
+    }
+
     func clear() {
         items = []
         sessionID = nil
         costUSD = 0
         needsLogin = false
         lastError = nil
+        permissionRequests = []
+        allowAll = false
     }
 
     /// Start a fresh conversation in `directory`.
@@ -68,6 +104,18 @@ final class ClaudeRunner: ObservableObject {
         current?.process.terminate()
         current = nil
         isRunning = false
+        permissionRequests = []
+    }
+
+    /// Answers one of the assistant's permission requests. "Allow all" also answers every other open request.
+    func answer(_ request: PermissionRequest, _ decision: Decision) {
+        guard permissionRequests.contains(where: { $0.id == request.id }) else { return }
+        if decision == .allowAll {
+            allowAll = true
+            permissionRequests.forEach { respond(to: $0, allow: true) }
+        } else {
+            respond(to: request, allow: decision == .allow)
+        }
     }
 
     /// Appends an item, watching every line for the "not logged in" failure: it can arrive on stderr, in a
@@ -88,16 +136,22 @@ final class ClaudeRunner: ObservableObject {
         isRunning = true
         lastError = nil
 
-        var arguments = ["-p", prompt,
-                         "--output-format", "stream-json", "--verbose",
+        // The prompt goes in on stdin as a stream-json message, so stdin stays open for permission answers.
+        var arguments = ["-p", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
+                         "--permission-prompt-tool", "stdio",
                          "--permission-mode", settings.permissionMode,
                          "--model", settings.model,
                          "--add-dir", directory.path]
+        for extra in settings.extraDirectories {
+            arguments += ["--add-dir", extra.path]
+        }
         if settings.maxBudgetUSD > 0 {
             arguments += ["--max-budget-usd", String(format: "%.2f", settings.maxBudgetUSD)]
         }
-        if !settings.allowCommands {
-            arguments += ["--disallowedTools", "Bash"]
+        switch settings.commands {
+        case .ask: break
+        case .always: arguments += ["--allowedTools", "Bash"]
+        case .never: arguments += ["--disallowedTools", "Bash"]
         }
         if let resume {
             arguments += ["--resume", resume]
@@ -113,13 +167,12 @@ final class ClaudeRunner: ObservableObject {
         task.arguments = ["-lc", command]
         task.currentDirectoryURL = directory
 
-        let out = Pipe(), err = Pipe()
-        // No stdin: the CLI would otherwise wait 3 s for piped input and warn about it on stderr.
-        task.standardInput = FileHandle.nullDevice
+        let input = Pipe(), out = Pipe(), err = Pipe()
+        task.standardInput = input
         task.standardOutput = out
         task.standardError = err
 
-        let run = Run(process: task)
+        let run = Run(process: task, input: input.fileHandleForWriting)
         let id = run.id
         // The main queue is FIFO, so chunks are handled in the order they were read. An empty read is end of
         // file: remove the handler there, or Foundation keeps calling it with empty data.
@@ -142,6 +195,7 @@ final class ClaudeRunner: ObservableObject {
         do {
             current = run
             try task.run()
+            send(["type": "user", "message": ["role": "user", "content": prompt]])
         } catch {
             current = nil
             out.fileHandleForReading.readabilityHandler = nil
@@ -216,7 +270,25 @@ final class ClaudeRunner: ObservableObject {
                     break
                 }
             }
+        case "control_request":
+            guard let requestID = event["request_id"] as? String,
+                  let request = event["request"] as? [String: Any] else { return }
+            if request["subtype"] as? String == "can_use_tool" {
+                ask(requestID, request)
+            } else {
+                // Nothing else the CLI can ask a host for is needed here; say so rather than leave it waiting.
+                send(["type": "control_response", "response": [
+                    "subtype": "error", "request_id": requestID,
+                    "error": "Researcher Pal doesn't handle \(request["subtype"] as? String ?? "this request")."]])
+            }
+        case "control_cancel_request":
+            // The CLI no longer needs an answer (the turn ended, say).
+            if let requestID = event["request_id"] as? String {
+                permissionRequests.removeAll { $0.id == requestID }
+            }
         case "result":
+            // The turn is over: closing stdin lets the CLI exit. A reply starts a new process with --resume.
+            try? current?.input.close()
             if let id = event["session_id"] as? String { sessionID = id }
             costUSD = event["total_cost_usd"] as? Double ?? costUSD
             // A failed API call (an expired login, say) still reports subtype "success"; is_error is what says
@@ -242,12 +314,71 @@ final class ClaudeRunner: ObservableObject {
         }
     }
 
+    private func ask(_ requestID: String, _ request: [String: Any]) {
+        let tool = request["tool_name"] as? String ?? "tool"
+        let input = request["input"] as? [String: Any] ?? [:]
+        let pending = PermissionRequest(
+            id: requestID,
+            title: request["description"] as? String ?? Self.title(tool: tool, input: input),
+            summary: Self.summary(tool: tool, input: input, display: request["display_name"] as? String),
+            detail: tool == "Bash" ? input["description"] as? String : nil,
+            tool: tool, input: input)
+        if allowAll {
+            respond(to: pending, allow: true, wasAsked: false)
+        } else {
+            permissionRequests.append(pending)
+        }
+    }
+
+    private func respond(to request: PermissionRequest, allow: Bool, wasAsked: Bool = true) {
+        permissionRequests.removeAll { $0.id == request.id }
+        let answer: [String: Any] = allow
+            ? ["behavior": "allow", "updatedInput": request.input]
+            : ["behavior": "deny", "message": "The user declined this in Researcher Pal."]
+        send(["type": "control_response", "response": ["subtype": "success", "request_id": request.id, "response": answer]])
+        if allow {
+            append(Item(kind: .tool, text: (wasAsked ? "Allowed: " : "Allowed (allow all): ") + request.summary))
+        } else {
+            append(Item(kind: .error, text: "Declined: " + request.summary))
+        }
+    }
+
+    /// Writes one JSON message to the CLI's stdin.
+    private func send(_ message: [String: Any]) {
+        guard let input = current?.input,
+              var data = try? JSONSerialization.data(withJSONObject: message, options: [.withoutEscapingSlashes]) else { return }
+        data.append(UInt8(ascii: "\n"))
+        try? input.write(contentsOf: data)
+    }
+
+    private static func title(tool: String, input: [String: Any]) -> String {
+        switch tool {
+        case "Bash": return "Run a command?"
+        case "Write", "Edit", "MultiEdit", "NotebookEdit": return "Change a file?"
+        case "Read", "Glob", "Grep": return "Read files outside this paper's folder?"
+        case "WebFetch", "WebSearch": return "Use the web?"
+        default: return "Use \(tool)?"
+        }
+    }
+
+    private static func summary(tool: String, input: [String: Any], display: String?) -> String {
+        for key in ["command", "file_path", "notebook_path", "path", "url", "query", "pattern"] {
+            if let value = input[key] as? String { return value }
+        }
+        if let data = try? JSONSerialization.data(withJSONObject: input, options: [.sortedKeys, .withoutEscapingSlashes]),
+           let json = String(data: data, encoding: .utf8), json != "{}" {
+            return "\(display ?? tool) \(json.prefix(400))"
+        }
+        return display ?? tool
+    }
+
     /// A run is over once the process has exited and both pipes have been read to the end, so the last lines
     /// of output (usually the result) are always shown before the run is marked finished.
     private func finishIfDone() {
         guard let run = current, run.openStreams == 0, let status = run.exitStatus else { return }
         current = nil
         isRunning = false
+        permissionRequests = []
         if status != 0 && status != 15 && !needsLogin {
             lastError = "The assistant exited with status \(status)"
             append(Item(kind: .error, text: lastError!))

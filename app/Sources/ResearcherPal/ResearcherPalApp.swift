@@ -168,7 +168,7 @@ struct PaperView: View {
     @EnvironmentObject private var library: Library
     @AppStorage("model") private var model = "opus"
     @AppStorage("permissionMode") private var permissionMode = "acceptEdits"
-    @AppStorage("allowCommands") private var allowCommands = true
+    @AppStorage("commands") private var commands = ClaudeRunner.CommandPolicy.ask.rawValue
     @AppStorage("maxBudgetUSD") private var maxBudget = 10.0
     @State private var tab = Tab.overview
     @State private var animation: URL?
@@ -178,7 +178,9 @@ struct PaperView: View {
     enum Tab: String, CaseIterable { case overview = "Overview", map = "Concept map", animations = "Animations", exercises = "Exercises", ideas = "Ideas" }
 
     private var settings: ClaudeRunner.Settings {
-        .init(model: model, permissionMode: permissionMode, allowCommands: allowCommands, maxBudgetUSD: maxBudget)
+        // The knowledge graph lives next to the papers folder and is shared by every paper.
+        .init(model: model, permissionMode: permissionMode, commands: ClaudeRunner.CommandPolicy(rawValue: commands) ?? .ask,
+              maxBudgetUSD: maxBudget, extraDirectories: [library.knowledgeGraph.deletingLastPathComponent()])
     }
 
     var body: some View {
@@ -298,6 +300,9 @@ struct RunPane: View {
                     if let last = runner.items.last { proxy.scrollTo(last.id, anchor: .bottom) }
                 }
             }
+            ForEach(runner.permissionRequests) { request in
+                PermissionCard(request: request) { runner.answer(request, $0) }
+            }
             Divider()
             HStack(spacing: 8) {
                 TextField(runner.canReply ? "Answer Claude…" : "Start a run first", text: $replyText)
@@ -361,12 +366,45 @@ struct RunPane: View {
     }
 }
 
+/// The assistant is waiting: it wants to run a command or touch a file, and the user decides.
+struct PermissionCard: View {
+    let request: ClaudeRunner.PermissionRequest
+    let decide: (ClaudeRunner.Decision) -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "hand.raised.fill").foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(request.title).font(.callout.weight(.medium))
+                Text(request.summary)
+                    .font(.system(.callout, design: .monospaced))
+                    .lineLimit(6)
+                    .textSelection(.enabled)
+                if let detail = request.detail {
+                    Text(detail).font(.caption).foregroundStyle(.secondary)
+                }
+                HStack {
+                    Button("Allow") { decide(.allow) }.buttonStyle(.borderedProminent)
+                    Button("Allow all") { decide(.allowAll) }
+                        .help("Allow this and everything else the assistant asks for in this conversation")
+                    Button("Deny", role: .destructive) { decide(.deny) }
+                }
+                .controlSize(.small)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.10))
+    }
+}
+
 // MARK: - settings
 
 struct SettingsView: View {
     @AppStorage("model") private var model = "opus"
     @AppStorage("permissionMode") private var permissionMode = "acceptEdits"
-    @AppStorage("allowCommands") private var allowCommands = true
+    @AppStorage("commands") private var commands = ClaudeRunner.CommandPolicy.ask.rawValue
     @AppStorage("maxBudgetUSD") private var maxBudget = 10.0
 
     var body: some View {
@@ -379,7 +417,13 @@ struct SettingsView: View {
                 Text("Write files without asking").tag("acceptEdits")
                 Text("Ask every time").tag("default")
             }
-            Toggle("Let it run commands (needed for coded exercises)", isOn: $allowCommands)
+            Picker("Commands", selection: $commands) {
+                Text("Ask me each time").tag(ClaudeRunner.CommandPolicy.ask.rawValue)
+                Text("Run without asking").tag(ClaudeRunner.CommandPolicy.always.rawValue)
+                Text("Never").tag(ClaudeRunner.CommandPolicy.never.rawValue)
+            }
+            Text("Studying a paper runs commands: downloading it, reading its text, and testing the exercises.")
+                .font(.caption).foregroundStyle(.secondary)
             HStack {
                 Text("Stop a run at")
                 TextField("", value: $maxBudget, format: .currency(code: "USD")).frame(width: 90)
