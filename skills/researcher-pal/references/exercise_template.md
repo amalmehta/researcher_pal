@@ -267,24 +267,18 @@ theorem or central argument, broken into parts that reuse the earlier problems.
 
 ## 8. Verification
 
-Run from `papers/<slug>/` with the chosen interpreter. Both checks must be clean before
-the learner sees any coded exercise.
+Run the skill's checker with the chosen interpreter. It must be clean before the learner sees
+any exercise:
 
 ```bash
-PY=python3   # the interpreter picked in the ground rules
-# 1) Every untouched stub must fail.
-for d in exercises/[0-9]*/; do
-  [ -f "$d/test_impl.py" ] || continue   # worked problems have no tests
-  if $PY -m pytest "$d" >/dev/null 2>&1; then echo "BAD  stub passes: $d"; else echo "ok   stub fails:  $d"; fi
-done
-# 2) Every reference solution must pass: copy the exercises and overlay the solutions.
-TMP="$(mktemp -d)"; cp -R exercises/. "$TMP/"
-for f in .solutions/*/impl.py; do cp "$f" "$TMP/$(basename "$(dirname "$f")")/impl.py"; done
-$PY -m pytest "$TMP"; echo "solutions exit code: $?"
+python3 <skill dir>/scripts/check_learning.py papers/<slug> --python <the interpreter picked in the ground rules>
 ```
 
-A stub "failing" because pytest itself crashed doesn't count. Check that the output
-shows real test failures (`N failed`), not a startup error.
+For each coded exercise on its own, it requires the untouched stub to fail with real test
+failures (a pytest crash, a collection error or "no tests collected" doesn't count) and the
+reference solution, overlaid on a copy, to pass within the time limit (1 minute; 5 for the final
+exercise). It also checks that every exercise has its README and reference solution and that no
+solution code leaked into the learner's files.
 
 For worked problems, re-read `solution.md` against the paper: the final result must
 match the cited equation, and every point in "A complete answer shows" must be covered.
