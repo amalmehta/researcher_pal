@@ -19,7 +19,8 @@ Everything for one paper lives under `papers/<slug>/` in the current directory
 ```
 papers/<slug>/
 ├── paper.pdf
-├── paper.txt                      # extracted text, only if needed (step 2)
+├── paper.txt                      # extracted text, for prose and search only (step 2)
+├── pages/page-NNN.png             # rendered pages, when the Read tool can't open the PDF (step 2)
 ├── concept_graph.md
 ├── animations/<concept-id>.html   # one per animated concept
 ├── animations/_player.js, _player.css   # the shared player, copied once per paper
@@ -76,22 +77,24 @@ Read every page, appendix included. The details needed to implement or reproduce
 result often hide in appendices, footnotes and figure captions.
 
 1. Try the Read tool on the PDF (`pages`, up to 20 per call). If it can't render pages
-   (e.g. poppler is missing), extract text to `paper.txt` instead, trying in order:
-   - macOS: a PDFKit one-off: save this as a `.swift` file in a scratch folder and run
-     `swift <file> paper.pdf > paper.txt`:
-     ```swift
-     import Foundation; import PDFKit
-     let doc = PDFDocument(url: URL(fileURLWithPath: CommandLine.arguments[1]))!
-     for i in 0..<doc.pageCount { print("\n===== PAGE \(i+1) =====\n" + (doc.page(at: i)?.string ?? "")) }
-     ```
-   - `pdftotext -layout paper.pdf paper.txt` if installed.
-2. Extracted text garbles math: subscripts flatten, and fractions and roots vanish. For
-   arXiv papers, get equations exactly from the LaTeX source
-   (`curl -sSL https://arxiv.org/e-print/<id>` into a scratch dir; it's usually a tar.gz,
-   sometimes a single gzipped `.tex`). Commented-out passages in the source can explain
-   odd cross-references, but they are **not in paper**. For local PDFs, rebuild each
-   equation from the surrounding text and symbol definitions, and tell the learner which
-   ones you reconstructed.
+   (it needs poppler, which most Macs don't have), run
+   `python3 <skill dir>/scripts/pdf_pages.py papers/<slug>/paper.pdf`. It renders every page to
+   `papers/<slug>/pages/page-NNN.png` and writes the text to `paper.txt` with page markers, using
+   macOS's built-in PDFKit (nothing to install) or poppler. Read the page images with the Read tool.
+2. **Math comes from the page, never from extracted text.** `paper.txt` is for prose and for
+   searching. Text extraction flattens superscripts and subscripts and silently drops symbols:
+   on the Barabási–Albert paper, P(k) ∼ k^−γ comes out as `P (k)∼ k γ` (minus sign gone) and
+   k_i(t) = m(t/t_i)^0.5 as `ki(t) = m(t/ti)0.5`. Take every equation, sign, exponent, index,
+   subscript and number inside math from one of:
+   - the LaTeX source, for arXiv papers (`curl -sSL https://arxiv.org/e-print/<id>` into a
+     scratch dir; it's usually a tar.gz, sometimes a single gzipped `.tex`). Commented-out
+     passages in the source can explain odd cross-references, but they are **not in paper**;
+   - the page images. If a symbol is too small to read for certain, zoom in:
+     `pdf_pages.py papers/<slug>/paper.pdf --pages N --dpi 300 --bands 3 --no-text --out papers/<slug>/pages/zoom`
+     renders that page as three overlapping strips at full resolution.
+
+   If a symbol still can't be read for certain, say so in the concept entry rather than
+   guessing, and tell the learner which equations you could only partly read.
 3. Build an inventory: every section and subsection, every numbered equation (plus
    important unnumbered ones, labeled like "§3.3 unnumbered"), theorem, algorithm, figure
    and table. This becomes the coverage table in step 3, which is how you prove nothing
