@@ -32,8 +32,11 @@ then type `/login` and follow the prompts. If the login has expired, the app sho
   and show up in the tabs. The skill pauses to ask you things; answer in the box at the bottom.
 - **Suggest improvements** runs paper-ideas on a paper you've studied and writes a ranked report you can read
   in the Ideas tab. It stops and asks before applying an edit or running an experiment.
-- **Settings** (⌘,) chooses the model, whether files can be written without asking, whether commands may run
-  (needed for coded exercises), and a spending cap per run.
+- **Permission requests:** when the assistant wants to run a command (download the paper, extract its text, test
+  an exercise) or change a file outside the paper's folder, a card shows exactly what, with *Allow*, *Allow all*
+  (for the rest of the conversation) and *Deny*. The run waits until you answer.
+- **Settings** (⌘,) chooses the model, whether files can be written without asking, whether commands ask first,
+  run without asking or never run (studying a paper needs them), and a spending cap per run.
 
 ## Where things go
 
