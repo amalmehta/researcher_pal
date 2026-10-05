@@ -257,7 +257,7 @@ struct PaperView: View {
         Help me learn \(target). Work inside \(paper.directory.path): put the concept graph, animations and \
         exercises there (papers/<slug> is this folder itself, so write concept_graph.md, animations/ and \
         exercises/ directly in it). Pause where the skill says to pause and ask me.
-        """, in: paper.directory, settings: settings)
+        """, label: "Study this paper", in: paper.directory, settings: settings)
     }
 
     private func improve() {
