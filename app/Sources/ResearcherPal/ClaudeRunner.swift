@@ -114,6 +114,8 @@ final class ClaudeRunner: ObservableObject {
         task.currentDirectoryURL = directory
 
         let out = Pipe(), err = Pipe()
+        // No stdin: the CLI would otherwise wait 3 s for piped input and warn about it on stderr.
+        task.standardInput = FileHandle.nullDevice
         task.standardOutput = out
         task.standardError = err
 
@@ -217,12 +219,24 @@ final class ClaudeRunner: ObservableObject {
         case "result":
             if let id = event["session_id"] as? String { sessionID = id }
             costUSD = event["total_cost_usd"] as? Double ?? costUSD
-            let subtype = event["subtype"] as? String ?? "done"
-            if subtype != "success", let text = event["result"] as? String {
-                append(Item(kind: .error, text: text))
+            // A failed API call (an expired login, say) still reports subtype "success"; is_error is what says
+            // the run failed.
+            let subtype = event["subtype"] as? String ?? "success"
+            let failed = event["is_error"] as? Bool == true || subtype != "success"
+            if failed {
+                var reasons = (event["errors"] as? [String]) ?? []
+                if let text = event["result"] as? String, !text.isEmpty { reasons.insert(text, at: 0) }
+                for reason in reasons {
+                    // The failure usually arrived as the assistant's last message already: show it once, as an error.
+                    if let last = items.last, last.kind == .assistant, last.text == reason {
+                        items.removeLast()
+                    }
+                    append(Item(kind: .error, text: reason))
+                }
             }
             let turns = event["num_turns"] as? Int ?? 0
-            append(Item(kind: .result, text: "\(subtype) · \(turns) turns · $\(String(format: "%.2f", costUSD))"))
+            let summary = "\(turns) turn\(turns == 1 ? "" : "s") · $\(String(format: "%.2f", costUSD))"
+            append(Item(kind: failed ? .error : .result, text: (failed ? "Failed · " : "Done · ") + summary))
         default:
             break
         }
