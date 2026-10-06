@@ -118,10 +118,11 @@ final class Library: ObservableObject {
 
     /// A folder name for `name`: lowercase words joined by hyphens, at most 60 characters.
     static func baseSlug(_ name: String) -> String {
-        let base = name.lowercased()
+        // Cut to length first, then trim, so a cut that lands on a hyphen doesn't leave one at the end.
+        return String(name.lowercased()
             .replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
+            .prefix(60))
             .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-        return String(base.prefix(60))
     }
 
     /// `baseSlug`, made unique among the folders that already exist.
