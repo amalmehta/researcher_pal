@@ -37,6 +37,9 @@ then type `/login` and follow the prompts. If the login has expired, the app sho
 - **Learn with a tutor** appears once a paper's material is built: the assistant keeps that material as it is,
   asks what you already know and where to start, then tutors you one exercise at a time and records what you
   learn in the knowledge graph.
+- **Career fit** (top of the sidebar): write a few lines *About me*, press *Find my fit*, and the career-fit skill
+  researches the companies and roles you'd love and your best fit (ikigai), from your library and profile. Every
+  company and opening links its source and date; your profile never leaves the Mac (searches use keywords only).
 - **Case studies** of real incidents sit in their own sidebar section. Each is built like a paper (concept map,
   animations, exercises) from numbered sources instead of a PDF; the Sources tab lists them.
 - **Suggest improvements** runs paper-ideas on a paper you've studied and writes a ranked report you can read
@@ -52,6 +55,8 @@ then type `/login` and follow the prompts. If the login has expired, the app sho
 ```
 ~/researcher-pal/
 ├── knowledge_graph.md          # topics across all papers, maintained by the skill
+├── profile.md                  # About me, for Career fit
+├── career/careers.md           # the latest career-fit report
 ├── case-studies/<slug>/        # same layout as a paper, with sources.md instead of paper.pdf
 └── papers/<slug>/
     ├── paper.pdf               # what you dropped in, or the downloaded open-access copy

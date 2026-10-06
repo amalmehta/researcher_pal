@@ -4,7 +4,7 @@
 
 | Folder | Contents |
 |---|---|
-| `skills/` | The three skills, linked into ~/.claude/skills by the install step |
+| `skills/` | The four skills, linked into ~/.claude/skills by the install step |
 | `examples/attention-is-all-you-need/` | A full learning run: concept map, 4 animations, 12 exercises |
 | `examples/barabasi-albert-scaling/` | A learning run on a non-ML paper, plus improvement ideas and an experiment |
 | `examples/paper-toy-transformer-ablation/` | A short example paper built for NeurIPS and ICLR, plus improvement ideas and an experiment |

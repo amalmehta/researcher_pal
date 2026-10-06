@@ -42,7 +42,9 @@ struct ContentView: View {
         NavigationSplitView {
             sidebar
         } detail: {
-            if let selected {
+            if selection == CareerView.selectionID {
+                CareerView(runner: runner)
+            } else if let selected {
                 PaperView(paper: selected, runner: runner)
                     .id(selected.id)
             } else {
@@ -65,6 +67,9 @@ struct ContentView: View {
     private var sidebar: some View {
         VStack(spacing: 0) {
             List(selection: $selection) {
+                Section {
+                    Label("Career fit", systemImage: "sparkles").tag(CareerView.selectionID)
+                }
                 Section("Papers") {
                     ForEach(library.papers.filter { $0.kind == .paper }, content: row)
                 }
@@ -255,7 +260,7 @@ struct PaperView: View {
     @ViewBuilder private var content: some View {
         switch tab {
         case .overview:
-            RunPane(runner: runner, paper: paper, replyText: $replyText, settings: settings)
+            RunPane(runner: runner, directory: paper.directory, replyText: $replyText, settings: settings)
         case .map:
             WebPane(fileURL: paper.conceptGraph, readAccess: paper.directory)
         case .animations:
@@ -326,7 +331,8 @@ struct PaperView: View {
 
 struct RunPane: View {
     @ObservedObject var runner: ClaudeRunner
-    let paper: Paper
+    let directory: URL
+    var emptyHint = "Press “Study this paper” to begin. What Claude does appears here, and you can answer when it asks."
     @Binding var replyText: String
     let settings: ClaudeRunner.Settings
 
@@ -337,7 +343,7 @@ struct RunPane: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 10) {
                         if runner.items.isEmpty {
-                            Text("Press “Study this paper” to begin. What Claude does appears here, and you can answer when it asks.")
+                            Text(emptyHint)
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 8)
                         }
@@ -413,7 +419,7 @@ struct RunPane: View {
 
     private func send() {
         guard runner.canReply, !replyText.isEmpty else { return }
-        runner.reply(replyText, in: paper.directory, settings: settings)
+        runner.reply(replyText, in: directory, settings: settings)
         replyText = ""
     }
 }
