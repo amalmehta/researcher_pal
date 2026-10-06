@@ -20,7 +20,8 @@ Everything for one paper lives under `papers/<slug>/` in the current directory
 papers/<slug>/
 ├── paper.pdf
 ├── source.json                    # where the PDF came from, if it was downloaded (step 1)
-├── paper.txt                      # extracted text, only if needed (step 2)
+├── paper.txt                      # extracted text, for prose and search only (step 2)
+├── pages/page-NNN.png             # rendered pages, when the Read tool can't open the PDF (step 2)
 ├── concept_graph.md
 ├── animations/<concept-id>.html   # one per animated concept
 ├── animations/_player.js, _player.css   # the shared player, copied once per paper
@@ -88,22 +89,24 @@ Read every page, appendix included. The details needed to implement or reproduce
 result often hide in appendices, footnotes and figure captions.
 
 1. Try the Read tool on the PDF (`pages`, up to 20 per call). If it can't render pages
-   (e.g. poppler is missing), extract text to `paper.txt` instead, trying in order:
-   - macOS: a PDFKit one-off: save this as a `.swift` file in a scratch folder and run
-     `swift <file> paper.pdf > paper.txt`:
-     ```swift
-     import Foundation; import PDFKit
-     let doc = PDFDocument(url: URL(fileURLWithPath: CommandLine.arguments[1]))!
-     for i in 0..<doc.pageCount { print("\n===== PAGE \(i+1) =====\n" + (doc.page(at: i)?.string ?? "")) }
-     ```
-   - `pdftotext -layout paper.pdf paper.txt` if installed.
-2. Extracted text garbles math: subscripts flatten, and fractions and roots vanish. For
-   arXiv papers, get equations exactly from the LaTeX source
-   (`curl -sSL https://arxiv.org/e-print/<id>` into a scratch dir; it's usually a tar.gz,
-   sometimes a single gzipped `.tex`). Commented-out passages in the source can explain
-   odd cross-references, but they are **not in paper**. For local PDFs, rebuild each
-   equation from the surrounding text and symbol definitions, and tell the learner which
-   ones you reconstructed.
+   (it needs poppler, which most Macs don't have), run
+   `python3 <skill dir>/scripts/pdf_pages.py papers/<slug>/paper.pdf`. It renders every page to
+   `papers/<slug>/pages/page-NNN.png` and writes the text to `paper.txt` with page markers, using
+   macOS's built-in PDFKit (nothing to install) or poppler. Read the page images with the Read tool.
+2. **Math comes from the page, never from extracted text.** `paper.txt` is for prose and for
+   searching. Text extraction flattens superscripts and subscripts and silently drops symbols:
+   on the Barabási–Albert paper, P(k) ∼ k^−γ comes out as `P (k)∼ k γ` (minus sign gone) and
+   k_i(t) = m(t/t_i)^0.5 as `ki(t) = m(t/ti)0.5`. Take every equation, sign, exponent, index,
+   subscript and number inside math from one of:
+   - the LaTeX source, for arXiv papers (`curl -sSL https://arxiv.org/e-print/<id>` into a
+     scratch dir; it's usually a tar.gz, sometimes a single gzipped `.tex`). Commented-out
+     passages in the source can explain odd cross-references, but they are **not in paper**;
+   - the page images. If a symbol is too small to read for certain, zoom in:
+     `pdf_pages.py papers/<slug>/paper.pdf --pages N --dpi 300 --bands 3 --no-text --out papers/<slug>/pages/zoom`
+     renders that page as three overlapping strips at full resolution.
+
+   If a symbol still can't be read for certain, say so in the concept entry rather than
+   guessing, and tell the learner which equations you could only partly read.
 3. Build an inventory: every section and subsection, every numbered equation (plus
    important unnumbered ones, labeled like "§3.3 unnumbered"), theorem, algorithm, figure
    and table. This becomes the coverage table in step 3, which is how you prove nothing
@@ -135,14 +138,16 @@ Then read `references/concept_graph_template.md` and follow its structure and Me
   - places where the text, figures and tables disagree, and "it is easy to see" steps
     that aren't easy;
   - units, shapes, and the regime where an approximation holds.
-- **Check the Mermaid diagram renders** before showing it. Write a scratch HTML page
-  that loads `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js`, puts the
-  diagram source in a `<pre class="mermaid">`, and runs `mermaid.run()`. Serve it from a
-  local web server (e.g. `python3 -m http.server`) and open the `http://localhost` URL with a
-  browser tool, since many browser tools can't run scripts on `file://` pages. Look for console
-  errors or Mermaid's error graphic, and fix any. If no
-  browser tool is available, re-check the template's syntax rules by hand and tell the
-  learner the diagram is unverified.
+- **Check it before showing it:** run
+  `python3 <skill dir>/scripts/check_learning.py papers/<slug> --no-run` and fix every FAIL. It
+  checks the map against the template's Mermaid rules, that every node has an entry and every
+  entry a node, that every entry cites the paper, and that every link and anchor resolves. It
+  needs no browser. If a browser tool is available, also render the diagram, since a renderer is
+  the final word: a scratch page that loads
+  `https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js`, puts the diagram in a
+  `<pre class="mermaid">` and runs `mermaid.run()`, served from `python3 -m http.server` and
+  opened at its `http://localhost` URL (many browser tools can't run scripts on `file://` pages).
+  Look for console errors or Mermaid's error graphic.
 
 ## Step 4: Build the animations
 
@@ -159,9 +164,9 @@ Copy `assets/animation_player.js` to `papers/<slug>/animations/_player.js` and
 `assets/animation_player.css` to `_player.css` once per paper: they hold the page skeleton, timeline,
 controls and drawing helpers that every animation shares, so a fix there fixes all of them.
 For each animation, copy `assets/animation_template.html` to
-`papers/<slug>/animations/<concept-id>.html` and edit only the `THIS ANIMATION` block (`EDIT
-ABOVE` block. The player (timeline, controls, keyboard, KaTeX) is shared. The template's
-softmax demo shows the whole API.
+`papers/<slug>/animations/<concept-id>.html` and edit only its `THIS ANIMATION` block (CONFIG,
+PARAMS, STEPS and `draw()`). The player (timeline, controls, keyboard, KaTeX) is shared. The
+template's softmax demo shows the whole API.
 
 What makes it 3Blue1Brown-like instead of a slideshow:
 - **One idea per animation.** Start concrete and small (4 tokens, 10 nodes, 2-D vectors),
@@ -176,9 +181,13 @@ What makes it 3Blue1Brown-like instead of a slideshow:
   and the equation (`\color{#58c4dd}` in TeX).
 
 Link each animation from its concept entry and add 🎬 to its node label.
-Then **verify each one** in a browser tool, served over `http://localhost` as in step 3. Check
-that there are no console errors, and that play, next/prev step, scrubbing and every slider
-visibly change the picture (take a screenshot before and after). Fix it before moving on.
+Then **verify each one** with `check_learning.py papers/<slug> --no-tests`. It runs every
+animation headless (with node, or the JavaScriptCore built into macOS) and fails if `draw()`
+throws at any step, if NaN or undefined reaches the drawing, or if a slider doesn't change the
+picture. The player catches `draw()` errors and paints them on the canvas, so a browser console
+stays clean even when the viewer sees an error. The checker can't judge whether a frame looks
+right, so if a browser tool is available, also open each page over `http://localhost` and take a
+screenshot of a few steps. Fix problems before moving on.
 
 ## Step 5: Pause for the learner
 
@@ -193,8 +202,7 @@ Record the topics they say they know as `known` in the knowledge graph.
 
 ## Step 6: Write the exercises
 
-Read `references/exercise_template.md` for the harness, file templates and the
-verification script.
+Read `references/exercise_template.md` for the harness and the file templates.
 
 - One exercise per concept worth practicing, in dependency order, numbered `01`, `02`, …
   Skip concepts the learner knows. Fold pure definitions into a neighbor.
@@ -217,11 +225,13 @@ verification script.
 
   Seed all randomness. Write assertion messages that teach. Each exercise's tests run on
   CPU in under a minute.
-- **Verify before the learner sees anything.** For coded exercises, run the verification
-  script: every untouched stub must fail and every reference solution must pass. A test
-  that passes on the stub or fails on the solution is itself wrong. For worked problems,
-  check that `solution.md` reaches the paper's own result (cite it) and covers every point
-  the README asks for.
+- **Verify before the learner sees anything:** run `check_learning.py papers/<slug>` and fix
+  every FAIL. It runs each coded exercise on its own: the untouched stub must fail its tests
+  (a pytest crash or collection error doesn't count as failing) and the reference solution
+  must pass within the time limit. It also checks that no solution code leaked into the
+  learner's files. A test that passes on the stub or fails on the solution is itself wrong.
+  For worked problems, also check by reading that `solution.md` reaches the paper's own result
+  (cite it) and covers every point the README asks for.
 
 ## Step 7: Tutor loop (one exercise at a time)
 
@@ -274,6 +284,7 @@ format and merge rules. In short:
   started, step 7), `learned` (tests passed or answer accepted, step 7). A learner can ask
   to reset a topic.
 - Every topic lists the papers where it appeared. Never delete topics or other papers' rows.
-- Update it at step 5 and after every exercise, and re-check that its Mermaid diagram renders.
+- Update it at step 5 and after every exercise. Its diagram follows the same Mermaid rules as
+  the concept graph; render it in a browser if you can.
 
 When the learner asks what they've learned, show the map and the topics table from this file.
