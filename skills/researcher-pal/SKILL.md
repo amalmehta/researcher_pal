@@ -1,6 +1,6 @@
 ---
 name: researcher-pal
-description: Teach someone any research paper from scratch, in any field (machine learning, physics, biology, economics, computer science, mathematics), and guide them to implement or work through it. Reads the paper (PDF or arXiv link), builds a Markdown + Mermaid concept graph explaining every equation, symbol and unstated nuance, makes interactive 3Blue1Brown-style HTML animations of the key ideas, then tutors the learner through exercises. Exercises are coded with tests (PyTorch, NumPy/SciPy or plain Python, chosen by field) or worked problems for proofs and theory, with escalating hints and hidden solutions. Keeps one knowledge graph of every topic the learner has learned across papers and skips what they already know. Use this whenever someone wants to learn, understand, study, reproduce or implement a specific paper, e.g. "help me learn arXiv 1706.03762", "walk me through the Barabási–Albert paper", "I want to really understand this PDF", "teach me the math in this paper", or a pasted paper link with "understand", "learn" or "implement", even if they never mention graphs, animations or exercises. Also use it when they ask what they've learned so far or want to see their knowledge graph. Not for one-paragraph summaries, literature reviews across many papers, or writing your own paper (use paper-writer).
+description: Teach someone any research paper from scratch, in any field (machine learning, physics, biology, economics, computer science, mathematics), and guide them to implement or work through it. Reads the paper (a PDF, or downloads an open-access copy from an arXiv ID, DOI, link or title), builds a Markdown + Mermaid concept graph explaining every equation, symbol and unstated nuance, makes interactive 3Blue1Brown-style HTML animations of the key ideas, then tutors the learner through exercises. Exercises are coded with tests (PyTorch, NumPy/SciPy or plain Python, chosen by field) or worked problems for proofs and theory, with escalating hints and hidden solutions. Keeps one knowledge graph of every topic the learner has learned across papers and skips what they already know. Use this whenever someone wants to learn, understand, study, reproduce or implement a specific paper, e.g. "help me learn arXiv 1706.03762", "walk me through the Barabási–Albert paper", "I want to really understand this PDF", "teach me the math in this paper", or a pasted paper link with "understand", "learn" or "implement", even if they never mention graphs, animations or exercises. Also use it when they ask what they've learned so far or want to see their knowledge graph. Not for one-paragraph summaries, literature reviews across many papers, or writing your own paper (use paper-writer).
 ---
 
 # researcher-pal
@@ -19,6 +19,7 @@ Everything for one paper lives under `papers/<slug>/` in the current directory
 ```
 papers/<slug>/
 ├── paper.pdf
+├── source.json                    # where the PDF came from, if it was downloaded (step 1)
 ├── paper.txt                      # extracted text, only if needed (step 2)
 ├── concept_graph.md
 ├── animations/<concept-id>.html   # one per animated concept
@@ -55,19 +56,30 @@ papers/<slug>/
   that plugin in `exercises/pytest.ini` with `-p no:<name>` rather than touching the
   learner's environment. To find the name, list the plugins with
   `python -c "import importlib.metadata as m; print(m.entry_points().get('pytest11', []))"`.
-- **External calls.** The only allowed downloads are the paper and its LaTeX source from
-  arxiv.org. Animations load KaTeX, and the Mermaid check loads mermaid.js, from
-  cdn.jsdelivr.net in the browser. No API keys, no other sites.
+- **External calls.** Downloads are limited to the paper and, for arXiv papers, its LaTeX source,
+  fetched by `scripts/fetch_paper.py` from arXiv and from the open-access copies that OpenAlex,
+  Semantic Scholar, Europe PMC, Unpaywall (only with the learner's email) and the paper's own page
+  point to. Never get around a paywall or a site's bot protection, and never use shadow libraries.
+  Animations load KaTeX, and the Mermaid check loads mermaid.js, from cdn.jsdelivr.net in the
+  browser. No API keys.
 - **Format.** All written output is Markdown, except the animation HTML files.
 - **Solutions stay hidden.** Never put solution code or answers in the learner's files, and
   never show `.solutions/` unless the learner explicitly asks.
 
 ## Step 1: Get the paper
 
-- arXiv ID or URL: `curl -sSL -o papers/<slug>/paper.pdf https://arxiv.org/pdf/<id>`. This
-  works for old-style IDs like `cond-mat/9910332` too. Note in `concept_graph.md` which
-  version you used (the ID's `vN`, or "latest as of <date>"), because equation numbers can
-  shift between versions.
+- Anything that identifies the paper: an arXiv ID or link, a DOI, an OpenReview, PubMed
+  Central, ACL Anthology or Semantic Scholar link, a publisher's page, a PDF link, or the title:
+  `python3 <skill dir>/scripts/fetch_paper.py "<what the learner gave>" --out papers/_incoming/paper.pdf`
+  (or straight into `papers/<slug>/` if the folder already exists). It downloads an open-access copy
+  and writes `source.json` beside it (title, DOI, arXiv ID, where the PDF came from). Then:
+  - exit 0: rename `papers/_incoming` to `papers/<slug>`, the slug made from the title in
+    `source.json`. For an arXiv paper, note in `concept_graph.md` which version you used (the
+    ID's `vN`, or "latest as of <date>"), because equation numbers can shift between versions;
+    its LaTeX source link is in `source.json` for step 2;
+  - exit 4 (a title matched several papers): show the candidates and ask which one;
+  - exit 3 (no open-access copy): tell the learner, list what was tried, and ask them to download
+    the PDF through their own access and give you the file. Don't look for other copies yourself.
 - Local PDF: copy it to `papers/<slug>/paper.pdf`.
 
 ## Step 2: Read the whole paper
