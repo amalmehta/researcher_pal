@@ -11,13 +11,16 @@ struct Paper: Identifiable, Hashable {
     var animations: [URL]
     var exercises: [URL]
     var ideas: URL?
-    var arxivID: String?
+    /// What the learner typed to add it (an arXiv ID, DOI, link or title), when it wasn't a PDF.
+    var source: String?
+    var downloading = false
 
     var id: String { slug }
     var isLearned: Bool { conceptGraph != nil }
 
     var status: String {
-        if !isLearned { return hasPDF || arxivID != nil ? "not studied yet" : "no paper file" }
+        if downloading { return "downloading…" }
+        if !isLearned { return hasPDF || source != nil ? "not studied yet" : "no paper file" }
         var parts = ["concept map"]
         if !animations.isEmpty { parts.append("\(animations.count) animation\(animations.count == 1 ? "" : "s")") }
         if !exercises.isEmpty { parts.append("\(exercises.count) exercise\(exercises.count == 1 ? "" : "s")") }
@@ -30,6 +33,18 @@ struct Paper: Identifiable, Hashable {
 final class Library: ObservableObject {
     @Published private(set) var papers: [Paper] = []
     @Published var root: URL
+    /// Folders whose paper is being downloaded right now.
+    @Published private(set) var downloading: Set<String> = []
+
+    /// The skill's downloader, from the install step's link in ~/.claude/skills.
+    var fetchScript: URL {
+        fm.homeDirectoryForCurrentUser.appendingPathComponent(".claude/skills/researcher-pal/scripts/fetch_paper.py")
+    }
+
+    enum FetchResult {
+        case added(Paper)
+        case failed(String)
+    }
 
     private let fm = FileManager.default
 
@@ -63,24 +78,29 @@ final class Library: ObservableObject {
             .filter { $0.hasDirectoryPath && !$0.lastPathComponent.hasPrefix("_") }
             .sorted { $0.lastPathComponent < $1.lastPathComponent } ?? []
         let ideas = dir.appendingPathComponent("ideas/ideas.md")
-        let arxiv = (try? String(contentsOf: dir.appendingPathComponent(".arxiv"), encoding: .utf8))?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        // .source holds what was typed; .arxiv is the older form, from before any link or title was accepted.
+        let source = [".source", ".arxiv"].lazy
+            .compactMap { try? String(contentsOf: dir.appendingPathComponent($0), encoding: .utf8) }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.first
+        let downloaded = (try? Data(contentsOf: dir.appendingPathComponent("source.json")))
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }?["title"] as? String
 
         return Paper(
             slug: dir.lastPathComponent,
-            title: title(graph: hasGraph ? graph : nil, slug: dir.lastPathComponent, arxiv: arxiv),
+            title: title(graph: hasGraph ? graph : nil, slug: dir.lastPathComponent, downloaded: downloaded, source: source),
             directory: dir,
             hasPDF: fm.fileExists(atPath: dir.appendingPathComponent("paper.pdf").path),
             conceptGraph: hasGraph ? graph : nil,
             animations: animations,
             exercises: exercises,
             ideas: fm.fileExists(atPath: ideas.path) ? ideas : nil,
-            arxivID: arxiv
+            source: source,
+            downloading: downloading.contains(dir.lastPathComponent)
         )
     }
 
-    /// The concept graph's first heading is the paper's real title; fall back to the folder name.
-    private func title(graph: URL?, slug: String, arxiv: String?) -> String {
+    /// The concept graph's first heading is the paper's real title; then the downloaded paper's; then what was typed.
+    private func title(graph: URL?, slug: String, downloaded: String?, source: String?) -> String {
         if let graph, let text = try? String(contentsOf: graph, encoding: .utf8),
            let heading = text.split(separator: "\n").first(where: { $0.hasPrefix("# ") }) {
             var name = heading.dropFirst(2).trimmingCharacters(in: .whitespaces)
@@ -89,17 +109,24 @@ final class Library: ObservableObject {
             }
             return name
         }
-        if let arxiv { return "arXiv " + arxiv }
+        if let downloaded, !downloaded.isEmpty { return downloaded }
+        if let source { return Self.arxivID(from: source).map { "arXiv " + $0 } ?? source }
         return slug.replacingOccurrences(of: "-", with: " ").capitalized
     }
 
     // MARK: - adding papers
 
-    func slug(from name: String) -> String {
+    /// A folder name for `name`: lowercase words joined by hyphens, at most 60 characters.
+    static func baseSlug(_ name: String) -> String {
         let base = name.lowercased()
             .replacingOccurrences(of: "[^a-z0-9]+", with: "-", options: .regularExpression)
             .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
-        let trimmed = String(base.prefix(60))
+        return String(base.prefix(60))
+    }
+
+    /// `baseSlug`, made unique among the folders that already exist.
+    func slug(from name: String) -> String {
+        let trimmed = Self.baseSlug(name)
         var candidate = trimmed.isEmpty ? "paper" : trimmed
         var n = 2
         while fm.fileExists(atPath: root.appendingPathComponent(candidate).path) {
@@ -116,22 +143,94 @@ final class Library: ObservableObject {
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         try fm.copyItem(at: url, to: dir.appendingPathComponent("paper.pdf"))
         refresh()
-        return papers.first { $0.directory == dir } ?? Paper(slug: dir.lastPathComponent, title: name,
-                                                             directory: dir, hasPDF: true, conceptGraph: nil,
-                                                             animations: [], exercises: [], ideas: nil, arxivID: nil)
+        return paper(in: dir)
     }
 
-    /// Accepts "1706.03762", "arXiv:1706.03762", or any arxiv.org URL.
-    @discardableResult
-    func addArxiv(_ raw: String) throws -> Paper {
-        let id = Self.arxivID(from: raw) ?? raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        let dir = root.appendingPathComponent(slug(from: "arxiv-" + id))
+    /// The paper in folder `dir`, matched by name (a listed folder's URL ends in "/", so URLs don't compare equal),
+    /// or a placeholder if it isn't listed yet.
+    private func paper(in dir: URL) -> Paper {
+        papers.first { $0.slug == dir.lastPathComponent } ?? Paper(
+            slug: dir.lastPathComponent, title: dir.lastPathComponent, directory: dir,
+            hasPDF: fm.fileExists(atPath: dir.appendingPathComponent("paper.pdf").path), conceptGraph: nil,
+            animations: [], exercises: [], ideas: nil)
+    }
+
+    /// Adds a paper from anything that identifies it: an arXiv ID or link, a DOI, a link to its page, or its title.
+    /// The folder appears at once (as "downloading…"); `done` gets the paper once the skill's downloader has fetched
+    /// an open-access copy, or the downloader's explanation when it couldn't (no open copy, or several papers
+    /// matched a title), in which case the folder is removed again.
+    func addReference(_ raw: String, done: @escaping (FetchResult) -> Void) throws -> Paper {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = Self.arxivID(from: text).map { "arxiv-" + $0 } ?? text
+        let dir = root.appendingPathComponent(slug(from: name))
         try fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        try id.write(to: dir.appendingPathComponent(".arxiv"), atomically: true, encoding: .utf8)
+        try text.write(to: dir.appendingPathComponent(".source"), atomically: true, encoding: .utf8)
+        guard fm.fileExists(atPath: fetchScript.path) else {
+            // No downloader installed: the skill fetches the paper itself when it is studied.
+            refresh()
+            done(.added(paper(in: dir)))
+            return paper(in: dir)
+        }
+        downloading.insert(dir.lastPathComponent)
         refresh()
-        return papers.first { $0.directory == dir } ?? Paper(slug: dir.lastPathComponent, title: "arXiv " + id,
-                                                             directory: dir, hasPDF: false, conceptGraph: nil,
-                                                             animations: [], exercises: [], ideas: nil, arxivID: id)
+        runFetch(text, into: dir) { [weak self] status, output in
+            guard let self else { return }
+            self.downloading.remove(dir.lastPathComponent)
+            if status == 0 {
+                done(.added(self.settle(dir)))
+            } else {
+                try? self.fm.removeItem(at: dir)
+                self.refresh()
+                done(.failed(Self.explanation(output, status: status)))
+            }
+        }
+        return paper(in: dir)
+    }
+
+    /// After a download: rename the folder after the paper's real title (when it was named after an ID or link).
+    private func settle(_ dir: URL) -> Paper {
+        refresh()
+        let paper = paper(in: dir)
+        // Already named after the title (the learner typed it): leave it.
+        guard !dir.lastPathComponent.hasPrefix(Self.baseSlug(paper.title)) else { return paper }
+        let target = root.appendingPathComponent(slug(from: paper.title))
+        guard (try? fm.moveItem(at: dir, to: target)) != nil else { return paper }
+        refresh()
+        return self.paper(in: target)
+    }
+
+    private func runFetch(_ text: String, into dir: URL, done: @escaping (Int32, String) -> Void) {
+        // A login shell, so python3 is the same one Terminal finds.
+        let quote = { (s: String) in "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        task.arguments = ["-lc", "exec python3 " + [fetchScript.path, text, "--out", dir.appendingPathComponent("paper.pdf").path]
+            .map(quote).joined(separator: " ")]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        task.standardError = pipe
+        task.standardInput = FileHandle.nullDevice
+        task.terminationHandler = { finished in
+            let output = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+            let status = finished.terminationStatus
+            DispatchQueue.main.async { done(status, output) }
+        }
+        do {
+            try task.run()
+        } catch {
+            DispatchQueue.main.async { done(-1, "Could not run python3: \(error.localizedDescription)") }
+        }
+    }
+
+    /// The part of the downloader's report worth showing: candidates for an ambiguous title, otherwise the verdict
+    /// and what was tried.
+    static func explanation(_ output: String, status: Int32) -> String {
+        let lines = output.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+            .filter { !$0.hasPrefix("Looking up") }
+        if status == 4, let start = lines.firstIndex(where: { $0.contains("doesn't pick out one paper") }) {
+            return lines[start...].joined(separator: "\n")
+        }
+        return lines.suffix(12).joined(separator: "\n")
     }
 
     static func arxivID(from text: String) -> String? {
