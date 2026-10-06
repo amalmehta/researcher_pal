@@ -42,9 +42,10 @@ Everything the repo can verify runs from one script (CI runs the same one):
 tools/checks.sh
 ```
 
-It runs the unit tests for the skills' scripts, checks both example idea reports, builds the site, runs the
-exercise tests (the stubs must fail and the reference solutions must pass), compiles both example papers and
-re-runs every figure and value script to confirm the papers still match their data. `tools/checks.sh --quick`
+It runs the unit tests for the skills' scripts, checks both example idea reports, builds the site, checks both
+learning examples with the skill's own checker (concept graph structure, every animation run headless, and every
+exercise's stub failing and solution passing), compiles both example papers and re-runs every figure and value
+script to confirm the papers still match their data. `tools/checks.sh --quick`
 skips the paper compile and the PyTorch exercises.
 
 ## Good to know
