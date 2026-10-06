@@ -66,17 +66,11 @@ struct ContentView: View {
         VStack(spacing: 0) {
             List(selection: $selection) {
                 Section("Papers") {
-                    ForEach(library.papers) { paper in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(paper.title).lineLimit(2)
-                            Text(paper.status).font(.caption).foregroundStyle(.secondary)
-                        }
-                        .padding(.vertical, 2)
-                        .tag(paper.id)
-                        .contextMenu {
-                            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([paper.directory]) }
-                            Button("Move to Trash", role: .destructive) { try? library.delete(paper) }
-                        }
+                    ForEach(library.papers.filter { $0.kind == .paper }, content: row)
+                }
+                if library.papers.contains(where: { $0.kind == .caseStudy }) {
+                    Section("Case studies") {
+                        ForEach(library.papers.filter { $0.kind == .caseStudy }, content: row)
                     }
                 }
             }
@@ -99,6 +93,19 @@ struct ContentView: View {
             .padding(12)
         }
         .navigationSplitViewColumnWidth(min: 240, ideal: 280)
+    }
+
+    private func row(_ paper: Paper) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(paper.title).lineLimit(2)
+            Text(paper.status).font(.caption).foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 2)
+        .tag(paper.id)
+        .contextMenu {
+            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([paper.directory]) }
+            Button("Move to Trash", role: .destructive) { try? library.delete(paper) }
+        }
     }
 
     private func openPanel() {
@@ -167,7 +174,7 @@ struct EmptyLibraryView: View {
                 .font(.system(size: 44))
                 .foregroundStyle(.secondary)
             Text("Drop a paper in").font(.title2)
-            Text("A PDF, or an arXiv link. Researcher Pal builds a concept map, animations and exercises,\nthen suggests what would make the paper stronger.")
+            Text("A PDF, or an arXiv ID, DOI, link or title. Researcher Pal builds a concept map, animations and\nexercises, then tutors you through them.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
         }
@@ -191,7 +198,12 @@ struct PaperView: View {
     @State private var exercise: URL?
     @State private var replyText = ""
 
-    enum Tab: String, CaseIterable { case overview = "Overview", map = "Concept map", animations = "Animations", exercises = "Exercises", ideas = "Ideas" }
+    enum Tab: String, CaseIterable { case overview = "Overview", map = "Concept map", animations = "Animations", exercises = "Exercises", ideas = "Ideas", sources = "Sources" }
+
+    /// A case study shows its sources where a paper shows its improvement ideas.
+    private var tabs: [Tab] {
+        paper.kind == .caseStudy ? [.overview, .map, .animations, .exercises, .sources] : [.overview, .map, .animations, .exercises, .ideas]
+    }
 
     private var settings: ClaudeRunner.Settings {
         // The knowledge graph lives next to the papers folder and is shared by every paper.
@@ -219,14 +231,20 @@ struct PaperView: View {
                     ProgressView().controlSize(.small)
                     Button("Stop", role: .destructive) { runner.stop() }
                 } else {
-                    Button(paper.isLearned ? "Study again" : "Study this paper") { study() }
-                        .buttonStyle(.borderedProminent)
-                    Button("Suggest improvements") { improve() }
-                        .disabled(!paper.isLearned)
+                    // Built material is reused, never rebuilt: the tutor starts from what is already there.
+                    if paper.isLearned {
+                        Button("Learn with a tutor") { tutor() }.buttonStyle(.borderedProminent)
+                    } else if paper.kind == .paper {
+                        Button("Study this paper") { study() }.buttonStyle(.borderedProminent)
+                    }
+                    if paper.kind == .paper {
+                        Button("Suggest improvements") { improve() }
+                            .disabled(!paper.isLearned)
+                    }
                 }
             }
             Picker("", selection: $tab) {
-                ForEach(Tab.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(tabs, id: \.self) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -248,6 +266,8 @@ struct PaperView: View {
                    label: { $0.deletingLastPathComponent().lastPathComponent })
         case .ideas:
             WebPane(fileURL: paper.ideas, readAccess: paper.directory)
+        case .sources:
+            WebPane(fileURL: paper.sources, readAccess: paper.directory)
         }
     }
 
@@ -280,6 +300,18 @@ struct PaperView: View {
         exercises there (papers/<slug> is this folder itself, so write concept_graph.md, animations/ and \
         exercises/ directly in it).\(provenance) Pause where the skill says to pause and ask me.
         """, label: "Study this paper", in: paper.directory, settings: settings)
+    }
+
+    private func tutor() {
+        let what = paper.kind == .caseStudy
+            ? "the case study in \(paper.directory.path). It's a real incident: sources.md lists its sources, and the facts must stay within them."
+            : "the paper in \(paper.directory.path)."
+        runner.start(prompt: """
+        Use the researcher-pal skill to tutor me on \(what) Its material is already built and checked: concept_graph.md, \
+        animations/, and exercises/ with hidden reference solutions in .solutions/. Don't rebuild or rewrite any of it. \
+        Start at step 5: show me the overview, ask what I already know and where I want to start, then run the tutor \
+        loop (step 7) one exercise at a time, recording what I learn in the knowledge graph.
+        """, label: "Learn with a tutor", in: paper.directory, settings: settings)
     }
 
     private func improve() {

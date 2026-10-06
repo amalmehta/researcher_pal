@@ -34,6 +34,11 @@ then type `/login` and follow the prompts. If the login has expired, the app sho
   A title that matches several papers lists them so you can paste the right one's DOI or arXiv ID.
 - **Study this paper** runs researcher-pal: a concept map, animations and exercises land in the paper's folder
   and show up in the tabs. The skill pauses to ask you things; answer in the box at the bottom.
+- **Learn with a tutor** appears once a paper's material is built: the assistant keeps that material as it is,
+  asks what you already know and where to start, then tutors you one exercise at a time and records what you
+  learn in the knowledge graph.
+- **Case studies** of real incidents sit in their own sidebar section. Each is built like a paper (concept map,
+  animations, exercises) from numbered sources instead of a PDF; the Sources tab lists them.
 - **Suggest improvements** runs paper-ideas on a paper you've studied and writes a ranked report you can read
   in the Ideas tab. It stops and asks before applying an edit or running an experiment.
 - **Permission requests:** when the assistant wants to run a command (download the paper, extract its text, test
@@ -47,6 +52,7 @@ then type `/login` and follow the prompts. If the login has expired, the app sho
 ```
 ~/researcher-pal/
 ├── knowledge_graph.md          # topics across all papers, maintained by the skill
+├── case-studies/<slug>/        # same layout as a paper, with sources.md instead of paper.pdf
 └── papers/<slug>/
     ├── paper.pdf               # what you dropped in, or the downloaded open-access copy
     ├── source.json             # for a download: title, DOI, arXiv ID and where the PDF came from
