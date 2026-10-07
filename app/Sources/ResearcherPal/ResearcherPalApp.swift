@@ -32,7 +32,7 @@ struct ContentView: View {
     @EnvironmentObject private var library: Library
     @StateObject private var runner = ClaudeRunner()
     @State private var selection: Paper.ID?
-    @State private var arxivField = ""
+    @State private var referenceField = ""
     @State private var dropTargeted = false
     @State private var error: String?
 
@@ -57,7 +57,7 @@ struct ContentView: View {
         .onReceive(Timer.publish(every: 4, on: .main, in: .common).autoconnect()) { _ in
             library.refresh()
         }
-        .alert("Could not add that", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+        .alert("Couldn't add that paper", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("OK", role: .cancel) { error = nil }
         } message: { Text(error ?? "") }
     }
@@ -88,12 +88,12 @@ struct ContentView: View {
                     Label("Add PDF…", systemImage: "doc.badge.plus").frame(maxWidth: .infinity)
                 }
                 HStack(spacing: 6) {
-                    TextField("arXiv ID or link", text: $arxivField)
+                    TextField("arXiv ID, DOI, link or title", text: $referenceField)
                         .textFieldStyle(.roundedBorder)
-                        .onSubmit(addArxiv)
-                    Button("Add", action: addArxiv).disabled(arxivField.isEmpty)
+                        .onSubmit(addReference)
+                    Button("Add", action: addReference).disabled(referenceField.isEmpty)
                 }
-                Text("or drop a PDF anywhere in this window")
+                Text("Downloads an open-access copy. Or drop a PDF anywhere in this window.")
                     .font(.caption2).foregroundStyle(.secondary)
             }
             .padding(12)
@@ -109,11 +109,24 @@ struct ContentView: View {
         for url in panel.urls { add { try library.addPDF(at: url) } }
     }
 
-    private func addArxiv() {
-        let text = arxivField
+    private func addReference() {
+        let text = referenceField.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
-        add { try library.addArxiv(text) }
-        arxivField = ""
+        referenceField = ""
+        addReference(text)
+    }
+
+    /// Selects the new paper at once (shown as downloading), then follows it if the folder is renamed after its
+    /// title, or explains why there was nothing to download.
+    private func addReference(_ text: String) {
+        add {
+            try library.addReference(text) { result in
+                switch result {
+                case .added(let paper): selection = paper.id
+                case .failed(let why): error = why
+                }
+            }
+        }
     }
 
     private func add(_ work: () throws -> Paper) {
@@ -133,8 +146,11 @@ struct ContentView: View {
                 }
             } else {
                 _ = provider.loadObject(ofClass: NSString.self) { text, _ in
-                    guard let text = text as? String, Library.arxivID(from: text) != nil else { return }
-                    Task { @MainActor in add { try library.addArxiv(text) } }
+                    // A dropped link or DOI (dropped plain text is too easy to drop by accident to treat as a title).
+                    guard let text = (text as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                          text.hasPrefix("http") || text.range(of: #"^(doi:\s*)?10\.\d{4,9}/\S+$"#, options: .regularExpression) != nil
+                            || Library.arxivID(from: text) != nil else { return }
+                    Task { @MainActor in addReference(text) }
                 }
             }
         }
@@ -254,11 +270,15 @@ struct PaperView: View {
     }
 
     private func study() {
-        let target = paper.arxivID.map { "arXiv \($0)" } ?? paper.directory.appendingPathComponent("paper.pdf").path
+        // The downloaded or dropped PDF when there is one; otherwise what was typed, for the skill to fetch.
+        let target = paper.hasPDF ? paper.directory.appendingPathComponent("paper.pdf").path : (paper.source ?? "this paper")
+        let provenance = FileManager.default.fileExists(atPath: paper.directory.appendingPathComponent("source.json").path)
+            ? " The PDF was downloaded; source.json beside it says from where, with the arXiv ID and LaTeX source link if it has them."
+            : ""
         runner.start(prompt: """
         Help me learn \(target). Work inside \(paper.directory.path): put the concept graph, animations and \
         exercises there (papers/<slug> is this folder itself, so write concept_graph.md, animations/ and \
-        exercises/ directly in it). Pause where the skill says to pause and ask me.
+        exercises/ directly in it).\(provenance) Pause where the skill says to pause and ask me.
         """, label: "Study this paper", in: paper.directory, settings: settings)
     }
 
