@@ -3,6 +3,9 @@ import Foundation
 /// One paper in the library, laid out the way the researcher-pal skill expects:
 /// ~/researcher-pal/papers/<slug>/{paper.pdf, concept_graph.md, animations/, exercises/, ideas/}
 struct Paper: Identifiable, Hashable {
+    /// A research paper, or a case study of a real incident built the same way (from sources instead of a PDF).
+    enum Kind: String { case paper, caseStudy }
+
     var slug: String
     var title: String
     var directory: URL
@@ -14,12 +17,17 @@ struct Paper: Identifiable, Hashable {
     /// What the learner typed to add it (an arXiv ID, DOI, link or title), when it wasn't a PDF.
     var source: String?
     var downloading = false
+    var kind = Kind.paper
+    /// A case study's numbered sources (sources.md).
+    var sources: URL?
 
-    var id: String { slug }
+    var id: String { kind.rawValue + "/" + slug }
+    /// Its concept map, animations and exercises have been built.
     var isLearned: Bool { conceptGraph != nil }
 
     var status: String {
         if downloading { return "downloading…" }
+        if kind == .caseStudy && !isLearned { return "not built yet" }
         if !isLearned { return hasPDF || source != nil ? "not studied yet" : "no paper file" }
         var parts = ["concept map"]
         if !animations.isEmpty { parts.append("\(animations.count) animation\(animations.count == 1 ? "" : "s")") }
@@ -58,12 +66,18 @@ final class Library: ObservableObject {
         root.deletingLastPathComponent().appendingPathComponent("knowledge_graph.md")
     }
 
-    func refresh() {
-        let dirs = (try? fm.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey])) ?? []
-        papers = dirs.compactMap(load).sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+    /// Case studies of real incidents, next to the papers folder.
+    var caseStudiesRoot: URL {
+        root.deletingLastPathComponent().appendingPathComponent("case-studies")
     }
 
-    private func load(_ dir: URL) -> Paper? {
+    func refresh() {
+        let list = { (folder: URL) in (try? self.fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isDirectoryKey])) ?? [] }
+        let all = list(root).compactMap { load($0) } + list(caseStudiesRoot).compactMap { load($0, kind: .caseStudy) }
+        papers = all.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+    }
+
+    private func load(_ dir: URL, kind: Paper.Kind = .paper) -> Paper? {
         var isDir: ObjCBool = false
         guard fm.fileExists(atPath: dir.path, isDirectory: &isDir), isDir.boolValue,
               !dir.lastPathComponent.hasPrefix(".") else { return nil }
@@ -95,7 +109,10 @@ final class Library: ObservableObject {
             exercises: exercises,
             ideas: fm.fileExists(atPath: ideas.path) ? ideas : nil,
             source: source,
-            downloading: downloading.contains(dir.lastPathComponent)
+            downloading: downloading.contains(dir.lastPathComponent),
+            kind: kind,
+            sources: fm.fileExists(atPath: dir.appendingPathComponent("sources.md").path)
+                ? dir.appendingPathComponent("sources.md") : nil
         )
     }
 
@@ -150,7 +167,7 @@ final class Library: ObservableObject {
     /// The paper in folder `dir`, matched by name (a listed folder's URL ends in "/", so URLs don't compare equal),
     /// or a placeholder if it isn't listed yet.
     private func paper(in dir: URL) -> Paper {
-        papers.first { $0.slug == dir.lastPathComponent } ?? Paper(
+        papers.first { $0.kind == .paper && $0.slug == dir.lastPathComponent } ?? Paper(
             slug: dir.lastPathComponent, title: dir.lastPathComponent, directory: dir,
             hasPDF: fm.fileExists(atPath: dir.appendingPathComponent("paper.pdf").path), conceptGraph: nil,
             animations: [], exercises: [], ideas: nil)
