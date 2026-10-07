@@ -9,6 +9,7 @@
 | **researcher-pal** | Teaches you a paper: a concept map, interactive animations, and exercises that rebuild the method | "help me learn arXiv 1706.03762" |
 | **paper-writer** | Helps you write your own paper for a specific venue (NeurIPS, ICML, ICLR or any other), with figures, tables and checked citations | "help me write my paper for NeurIPS" |
 | **paper-ideas** | Suggests ranked ways to improve a paper and, with your approval, applies edits or runs experiments | "suggest improvements for my paper" |
+| **career-fit** | Finds the companies and roles you'd love and your best fit (ikigai), from your library and a short profile, with every company and opening sourced | "what companies would I love to work at" |
 
 ## Install
 
@@ -16,7 +17,7 @@
 2. Link the skills so Claude Code can use them from any folder:
 
    ```bash
-   mkdir -p ~/.claude/skills && for s in researcher-pal paper-writer paper-ideas; do ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s; done
+   mkdir -p ~/.claude/skills && for s in researcher-pal paper-writer paper-ideas career-fit; do ln -sfn "$PWD/skills/$s" ~/.claude/skills/$s; done
    ```
 
 3. Open Claude Code and say one of the phrases above.
