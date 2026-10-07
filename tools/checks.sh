@@ -28,15 +28,16 @@ step "ideas reports" "$PY" skills/paper-ideas/scripts/check_ideas.py \
 
 step "static site builds" "$PY" site/build_site.py
 
-step "Barabasi-Albert exercises (solutions pass)" "$PY" tools/run_example_tests.py examples/barabasi-albert-scaling
-step "Barabasi-Albert exercises (stubs fail)" "$PY" tools/run_example_tests.py examples/barabasi-albert-scaling --stubs
+# The learning examples: concept graph, animations (run headless) and exercises (stubs fail, solutions pass).
+LEARN=skills/researcher-pal/scripts/check_learning.py
+step "Barabasi-Albert learning material" "$PY" $LEARN examples/barabasi-albert-scaling --python "$PY"
+if [ "$QUICK" != "--quick" ] && "$PY" -c "import torch" >/dev/null 2>&1; then
+  step "Attention learning material" "$PY" $LEARN examples/attention-is-all-you-need --python "$PY"
+else
+  step "Attention learning material (PyTorch exercises skipped)" "$PY" $LEARN examples/attention-is-all-you-need --no-tests
+fi
 
 if [ "$QUICK" != "--quick" ]; then
-  if "$PY" -c "import torch" >/dev/null 2>&1; then
-    step "Attention exercises (solutions pass)" "$PY" tools/run_example_tests.py examples/attention-is-all-you-need
-  else
-    echo ""; echo "=== Attention exercises: skipped (no PyTorch)"
-  fi
 
   TECTONIC=$(command -v tectonic || echo "$HOME/.local/bin/tectonic")
   if [ -x "$TECTONIC" ]; then
