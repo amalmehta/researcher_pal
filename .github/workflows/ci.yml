@@ -18,7 +18,10 @@ jobs:
           cache: pip
           cache-dependency-path: .github/workflows/ci.yml  # no requirements file; key the cache on this one
       - name: Install dependencies
-        run: python -m pip install --upgrade pip pytest markdown numpy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils  # pdf_pages.py's Linux backend, so its tests run here too
+          python -m pip install --upgrade pip pytest markdown numpy
       - name: Run checks
         env:
           PY: python
