@@ -7,7 +7,7 @@ struct CareerView: View {
 
     @ObservedObject var runner: ClaudeRunner
     @EnvironmentObject private var library: Library
-    @AppStorage("model") private var model = "opus"
+    @AppStorage("model") private var model = ClaudeRunner.defaultModel
     @AppStorage("permissionMode") private var permissionMode = "acceptEdits"
     @AppStorage("commands") private var commands = ClaudeRunner.CommandPolicy.ask.rawValue
     @AppStorage("maxBudgetUSD") private var maxBudget = 10.0

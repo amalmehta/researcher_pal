@@ -194,7 +194,7 @@ struct PaperView: View {
     let paper: Paper
     @ObservedObject var runner: ClaudeRunner
     @EnvironmentObject private var library: Library
-    @AppStorage("model") private var model = "opus"
+    @AppStorage("model") private var model = ClaudeRunner.defaultModel
     @AppStorage("permissionMode") private var permissionMode = "acceptEdits"
     @AppStorage("commands") private var commands = ClaudeRunner.CommandPolicy.ask.rawValue
     @AppStorage("maxBudgetUSD") private var maxBudget = 10.0
@@ -240,7 +240,7 @@ struct PaperView: View {
                     if paper.isLearned {
                         Button("Learn with a tutor") { tutor() }.buttonStyle(.borderedProminent)
                     } else if paper.kind == .paper {
-                        Button("Study this paper") { study() }.buttonStyle(.borderedProminent)
+                        Button("Analyze this paper") { analyze() }.buttonStyle(.borderedProminent)
                     }
                     if paper.kind == .paper {
                         Button("Suggest improvements") { improve() }
@@ -260,7 +260,11 @@ struct PaperView: View {
     @ViewBuilder private var content: some View {
         switch tab {
         case .overview:
-            RunPane(runner: runner, directory: paper.directory, replyText: $replyText, settings: settings)
+            if paper.kind == .paper && !paper.isLearned && runner.items.isEmpty && !runner.isRunning {
+                analyzePrompt
+            } else {
+                RunPane(runner: runner, directory: paper.directory, replyText: $replyText, settings: settings)
+            }
         case .map:
             WebPane(fileURL: paper.conceptGraph, readAccess: paper.directory)
         case .animations:
@@ -280,7 +284,7 @@ struct PaperView: View {
     private func picker(items: [URL], selection: Binding<URL?>, label: @escaping (URL) -> String) -> some View {
         if items.isEmpty {
             ContentUnavailableView("Nothing here yet", systemImage: "tray",
-                                   description: Text("Run “Study this paper” first."))
+                                   description: Text("Press “Analyze this paper” first."))
         } else {
             HSplitView {
                 List(items, id: \.self, selection: selection) { item in
@@ -294,17 +298,42 @@ struct PaperView: View {
         }
     }
 
-    private func study() {
+    /// The first thing to do with a new paper: one button, shown big until the material exists.
+    private var analyzePrompt: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "sparkles.rectangle.stack").font(.system(size: 40)).foregroundStyle(.secondary)
+            Text("Analyze this paper").font(.title2.weight(.semibold))
+            Text("""
+            Builds a concept map of every idea and equation, interactive animations of the key ones, and exercises \
+            that rebuild the method, all checked before you see them. It runs on its own without asking you \
+            questions; when it's done, press “Learn with a tutor” to work through it.
+            """)
+                .multilineTextAlignment(.center).foregroundStyle(.secondary).frame(maxWidth: 520)
+            Button { analyze() } label: { Text("Analyze this paper").padding(.horizontal, 10).padding(.vertical, 4) }
+                .buttonStyle(.borderedProminent).controlSize(.large)
+            Text("A long paper can take a while and costs more than a tutoring turn. The model is set in Settings.")
+                .font(.caption).foregroundStyle(.tertiary)
+        }
+        .padding(30)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Builds the paper's material in one go, the way the library papers were built: no pause for questions and no
+    /// tutoring (that's "Learn with a tutor", afterwards), and done only when the skill's checker passes.
+    private func analyze() {
         // The downloaded or dropped PDF when there is one; otherwise what was typed, for the skill to fetch.
         let target = paper.hasPDF ? paper.directory.appendingPathComponent("paper.pdf").path : (paper.source ?? "this paper")
         let provenance = FileManager.default.fileExists(atPath: paper.directory.appendingPathComponent("source.json").path)
             ? " The PDF was downloaded; source.json beside it says from where, with the arXiv ID and LaTeX source link if it has them."
             : ""
         runner.start(prompt: """
-        Help me learn \(target). Work inside \(paper.directory.path): put the concept graph, animations and \
-        exercises there (papers/<slug> is this folder itself, so write concept_graph.md, animations/ and \
-        exercises/ directly in it).\(provenance) Pause where the skill says to pause and ask me.
-        """, label: "Study this paper", in: paper.directory, settings: settings)
+        Use the researcher-pal skill to analyze \(target) and build its learning material in \(paper.directory.path) \
+        (papers/<slug> is this folder itself, so write concept_graph.md, animations/ and exercises/ directly in it).\
+        \(provenance) Do steps 1-4, 6 and 8. Don't stop at step 5 to ask me anything: assume I know nothing yet and \
+        want the whole paper. Skip step 7; I'll start learning afterwards with "Learn with a tutor". It's done when \
+        the skill's check_learning.py reports no FAIL. Then tell me in a few lines what you built and anything I \
+        should know about the paper.
+        """, label: "Analyze this paper", in: paper.directory, settings: settings)
     }
 
     private func tutor() {
@@ -332,7 +361,7 @@ struct PaperView: View {
 struct RunPane: View {
     @ObservedObject var runner: ClaudeRunner
     let directory: URL
-    var emptyHint = "Press “Study this paper” to begin. What Claude does appears here, and you can answer when it asks."
+    var emptyHint = "Press “Learn with a tutor” to begin. The conversation appears here, and you answer in the box below."
     @Binding var replyText: String
     let settings: ClaudeRunner.Settings
 
@@ -419,7 +448,7 @@ struct PermissionCard: View {
 // MARK: - settings
 
 struct SettingsView: View {
-    @AppStorage("model") private var model = "opus"
+    @AppStorage("model") private var model = ClaudeRunner.defaultModel
     @AppStorage("permissionMode") private var permissionMode = "acceptEdits"
     @AppStorage("commands") private var commands = ClaudeRunner.CommandPolicy.ask.rawValue
     @AppStorage("maxBudgetUSD") private var maxBudget = 10.0
@@ -427,8 +456,8 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Picker("Model", selection: $model) {
-                Text("Opus (most capable)").tag("opus")
-                Text("Sonnet (cheaper)").tag("sonnet")
+                Text("Sonnet (default: fast, about a fifth of Opus's price)").tag("sonnet")
+                Text("Opus (most capable, for the hardest papers)").tag("opus")
             }
             Picker("File changes", selection: $permissionMode) {
                 Text("Write files without asking").tag("acceptEdits")
