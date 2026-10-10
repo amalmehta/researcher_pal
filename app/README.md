@@ -32,8 +32,11 @@ then type `/login` and follow the prompts. If the login has expired, the app sho
   title. The app downloads an open-access copy right away and names the paper after its real title. It never gets
   around a paywall: if there's no open copy, it says what it tried, and you download the PDF yourself and drop it in.
   A title that matches several papers lists them so you can paste the right one's DOI or arXiv ID.
-- **Study this paper** runs researcher-pal: a concept map, animations and exercises land in the paper's folder
-  and show up in the tabs. The skill pauses to ask you things; answer in the box at the bottom.
+- **Analyze this paper** builds everything in one go: a concept map, animations and exercises land in the paper's
+  folder and show up in the tabs, checked before you see them. It doesn't stop to ask you questions.
+- **Download breakdown** (on any analyzed paper or case study) saves one PDF, typeset like a LaTeX article: the
+  summary, the concept map, the coverage table, every concept with its equations, key frames from each animation
+  under the concept it explains, and every exercise's instructions (never the solutions).
 - **Learn with a tutor** appears once a paper's material is built: the assistant keeps that material as it is,
   asks what you already know and where to start, then tutors you one exercise at a time and records what you
   learn in the knowledge graph.
