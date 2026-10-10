@@ -202,6 +202,8 @@ struct PaperView: View {
     @State private var animation: URL?
     @State private var exercise: URL?
     @State private var replyText = ""
+    @State private var exporting = false
+    @State private var exportError: String?
 
     enum Tab: String, CaseIterable { case overview = "Overview", map = "Concept map", animations = "Animations", exercises = "Exercises", ideas = "Ideas", sources = "Sources" }
 
@@ -222,6 +224,9 @@ struct PaperView: View {
             Divider()
             content
         }
+        .alert("Couldn't make the breakdown", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
+            Button("OK", role: .cancel) { exportError = nil }
+        } message: { Text(exportError ?? "") }
     }
 
     private var header: some View {
@@ -245,6 +250,14 @@ struct PaperView: View {
                     if paper.kind == .paper {
                         Button("Suggest improvements") { improve() }
                             .disabled(!paper.isLearned)
+                    }
+                    if paper.isLearned {
+                        if exporting {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Button { download() } label: { Label("Download breakdown", systemImage: "arrow.down.doc") }
+                                .help("Save the whole analysis as one PDF: summary, map, concepts, animations and exercises (no solutions)")
+                        }
                     }
                 }
             }
@@ -294,6 +307,24 @@ struct PaperView: View {
                 .frame(minWidth: 180, idealWidth: 220, maxWidth: 320)
                 WebPane(fileURL: selection.wrappedValue ?? items.first, readAccess: paper.directory)
                     .frame(minWidth: 400)
+            }
+        }
+    }
+
+    private func download() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.canCreateDirectories = true
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        let safeTitle = paper.title.replacingOccurrences(of: "[/:]", with: "-", options: .regularExpression)
+        panel.nameFieldStringValue = "\(safeTitle) - breakdown.pdf"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        exporting = true
+        Breakdown.export(paper, to: url) { result in
+            exporting = false
+            switch result {
+            case .success(let pdf): NSWorkspace.shared.open(pdf)
+            case .failure(let error): exportError = error.localizedDescription
             }
         }
     }
