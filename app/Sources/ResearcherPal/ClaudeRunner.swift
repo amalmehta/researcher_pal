@@ -19,8 +19,12 @@ final class ClaudeRunner: ObservableObject {
         var shown: String { label ?? text }
     }
 
+    /// Sonnet by default: tutoring and research on material that's already built and checked don't need Opus,
+    /// and it costs about a fifth as much. Opus stays one click away in Settings.
+    nonisolated static let defaultModel = "sonnet"
+
     struct Settings {
-        var model: String = "opus"
+        var model: String = ClaudeRunner.defaultModel
         var permissionMode: String = "acceptEdits"
         var commands: CommandPolicy = .ask
         var maxBudgetUSD: Double = 10
