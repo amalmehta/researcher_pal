@@ -148,6 +148,8 @@ final class ClaudeRunner: ObservableObject {
         if settings.maxBudgetUSD > 0 {
             arguments += ["--max-budget-usd", String(format: "%.2f", settings.maxBudgetUSD)]
         }
+        // Every run, replies included: the skills are written for a terminal, so say where they are.
+        arguments += ["--append-system-prompt", Self.appContext]
         switch settings.commands {
         case .ask: break
         case .always: arguments += ["--allowedTools", "Bash"]
@@ -389,15 +391,42 @@ final class ClaudeRunner: ObservableObject {
         }
     }
 
-    private static func describe(tool part: [String: Any]) -> String {
+    /// What the assistant needs to know to talk well inside the app rather than a terminal.
+    static let appContext = """
+    You are running inside Researcher Pal, a Mac app, not a terminal. Its purpose is to make a researcher's life \
+    easier with explanations that are easy to read without losing any depth or nuance. Write every message that way: \
+    open with the point in one or two plain sentences, then give the full detail underneath under short bold labels \
+    or a list: the exact equation, what each symbol means, the assumption it rests on, the caveat, and where it is in \
+    the paper (section, equation, figure). Simplify the wording, never the content: no condition, caveat or number is \
+    dropped to make a message shorter; move it below the summary instead. Define each symbol the first time it \
+    appears. The chat panel renders Markdown fully (headings, lists, tables, code, and math in $...$ or $$...$$), so \
+    use structure that helps scanning, but keep each message focused on one thing and ask one question at a time, \
+    waiting for the answer before the next. A paper's material is in the app's tabs: Concept map, Animations, \
+    Exercises, and Ideas (Sources for a case study). Point to those tabs by name. Don't list file paths, and don't \
+    tell the person to open files in a browser or run commands in a terminal; run commands yourself when needed \
+    (the app asks them for permission). The one exception: when they need to write code, name the single file to \
+    edit (e.g. exercises/02_mla/impl.py); they edit it in their own editor, and you offer to run its tests.
+    """
+
+    /// A step in plain words ("Read concept_graph.md", "Ran: run the exercise's tests"), not the raw tool call.
+    static func describe(tool part: [String: Any]) -> String {
         let name = part["name"] as? String ?? "tool"
-        guard let input = part["input"] as? [String: Any] else { return name }
-        for key in ["file_path", "path", "command", "pattern", "skill", "prompt"] {
-            if let value = input[key] as? String {
-                return "\(name): \(value.prefix(120))"
-            }
+        let input = part["input"] as? [String: Any] ?? [:]
+        let string = { (key: String) in (input[key] as? String).map { String($0.prefix(110)) } }
+        let file = { (key: String) in string(key).map { URL(fileURLWithPath: $0).lastPathComponent } }
+        switch name {
+        case "Read": return "Read " + (file("file_path") ?? "a file")
+        case "Write": return "Wrote " + (file("file_path") ?? "a file")
+        case "Edit", "MultiEdit", "NotebookEdit": return "Edited " + (file("file_path") ?? file("notebook_path") ?? "a file")
+        case "Bash": return "Ran: " + (string("description") ?? string("command") ?? "a command")
+        case "Glob", "Grep": return "Searched files" + (string("pattern").map { " for " + $0 } ?? "")
+        case "Skill": return "Opened the " + (string("skill") ?? "") + " skill"
+        case "WebSearch": return "Searched the web: " + (string("query") ?? "")
+        case "WebFetch": return "Read " + (string("url").flatMap { URL(string: $0)?.host } ?? "a web page")
+        case "TodoWrite": return "Updated its plan"
+        case "Task", "Agent": return "Started a helper" + (string("description").map { ": " + $0 } ?? "")
+        default: return name
         }
-        return name
     }
 
     private static func quote(_ argument: String) -> String {

@@ -41,6 +41,12 @@ papers/<slug>/
   later corrections by others) is labeled **not in paper**. If you're unsure what the paper
   means, say so rather than smoothing it over. Learners trust these notes, and a
   confident wrong detail costs them hours.
+- **Easy to read, with nothing lost.** The point of all this is to save a researcher time. Lead every
+  explanation (a concept entry, a tutoring message, a hint) with the idea in one or two plain sentences, then give
+  the full detail underneath, clearly labeled: the exact equation, every symbol, the assumption it rests on, the
+  caveat, and where it is in the paper. Simplify the wording, never the content: no condition, caveat or number
+  is dropped to make something shorter; it moves below the summary instead. Define each symbol where it first
+  appears, and use headings, lists and tables where they make the structure easier to see.
 - **Pick the exercise stack by field** and tell the learner which one:
 
   | The paper is about | Coded exercises use |
@@ -191,13 +197,13 @@ screenshot of a few steps. Fix problems before moving on.
 
 ## Step 5: Pause for the learner
 
-Show the path to `concept_graph.md` and the list of animations, plus a 3–5 line
-overview of the paper's structure and what is novel. Then ask, in one message:
+Point to the concept graph and the animations, and give a 3–5 line overview of the paper's
+structure and what is novel. Then ask these one at a time, waiting for each answer:
 1. The knowledge graph says you already know <topics>. Anything else you know? Those
    topics stay in the graph with the `known` class but get no exercise.
 2. Where do you want to start, and how deep? The whole paper, or just the novel parts?
 
-Wait for the answer. The exercises should fit what this learner actually needs.
+Wait for the answers. The exercises should fit what this learner actually needs.
 Record the topics they say they know as `known` in the knowledge graph.
 
 ## Step 6: Write the exercises
