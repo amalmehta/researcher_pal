@@ -422,7 +422,7 @@ final class ClaudeRunner: ObservableObject {
         case "Read": return "Read " + (file("file_path") ?? "a file")
         case "Write": return "Wrote " + (file("file_path") ?? "a file")
         case "Edit", "MultiEdit", "NotebookEdit": return "Edited " + (file("file_path") ?? file("notebook_path") ?? "a file")
-        case "Bash": return "Ran: " + (string("description") ?? string("command") ?? "a command")
+        case "Bash": return string("description").map { "Ran: " + $0 } ?? "Ran a command"
         case "Glob", "Grep": return "Searched files" + (string("pattern").map { " for " + $0 } ?? "")
         case "Skill": return "Opened the " + (string("skill") ?? "") + " skill"
         case "WebSearch": return "Searched the web: " + (string("query") ?? "")

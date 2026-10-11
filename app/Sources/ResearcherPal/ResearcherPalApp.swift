@@ -81,31 +81,58 @@ struct ContentView: View {
             }
             Divider()
             VStack(alignment: .leading, spacing: 8) {
-                Button {
-                    openPanel()
-                } label: {
-                    Label("Add PDF…", systemImage: "doc.badge.plus").frame(maxWidth: .infinity)
-                }
+                Text("Add a paper").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 HStack(spacing: 6) {
                     TextField("arXiv ID, DOI, link or title", text: $referenceField)
                         .textFieldStyle(.roundedBorder)
                         .onSubmit(addReference)
-                    Button("Add", action: addReference).disabled(referenceField.isEmpty)
+                    Button(action: addReference) {
+                        Image(systemName: "arrow.down.circle.fill").font(.system(size: 18))
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(referenceField.isEmpty)
+                    .help("Download an open-access copy")
                 }
-                Text("Downloads an open-access copy. Or drop a PDF anywhere in this window.")
-                    .font(.caption2).foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Button("Choose a PDF…", action: openPanel).buttonStyle(.link)
+                    Text("or drop one anywhere").foregroundStyle(.tertiary)
+                }
+                .font(.caption)
             }
-            .padding(12)
+            .padding(.horizontal, 14).padding(.vertical, 12)
         }
         .navigationSplitViewColumnWidth(min: 240, ideal: 280)
     }
 
     private func row(_ paper: Paper) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(paper.title).lineLimit(2)
-            Text(paper.status).font(.caption).foregroundStyle(.secondary)
+        HStack(alignment: .top, spacing: 9) {
+            Image(systemName: paper.kind == .caseStudy ? "exclamationmark.shield" : (paper.isLearned ? "doc.text.fill" : "doc.text"))
+                .font(.system(size: 13))
+                .foregroundStyle(paper.isLearned ? Color.accentColor : Color.secondary)
+                .frame(width: 16)
+                .padding(.top, 1)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(paper.title)
+                    .font(.system(size: 13, weight: .medium))
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                if paper.downloading {
+                    Text("Downloading…").font(.caption).foregroundStyle(.secondary)
+                } else if !paper.isLearned {
+                    Text(paper.kind == .caseStudy ? "Not built yet" : "Not analyzed yet").font(.caption).foregroundStyle(.secondary)
+                } else {
+                    HStack(spacing: 10) {
+                        if !paper.animations.isEmpty { Label("\(paper.animations.count)", systemImage: "play.rectangle") }
+                        if !paper.exercises.isEmpty { Label("\(paper.exercises.count)", systemImage: "pencil.and.list.clipboard") }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .labelStyle(CompactLabel())
+                }
+            }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
+        .help(paper.title)
         .tag(paper.id)
         .contextMenu {
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([paper.directory]) }
@@ -188,6 +215,13 @@ struct EmptyLibraryView: View {
     }
 }
 
+/// An icon and a short value, close together (sidebar counts).
+struct CompactLabel: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 3) { configuration.icon; configuration.title }
+    }
+}
+
 // MARK: - one paper
 
 struct PaperView: View {
@@ -230,44 +264,84 @@ struct PaperView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(paper.title).font(.title2).lineLimit(2)
-                    Text(paper.status).font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 18) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(paper.kind == .caseStudy ? "CASE STUDY" : "PAPER")
+                        .font(.caption2.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
+                    Text(paper.title)
+                        .font(.system(size: 22, weight: .semibold, design: .serif))
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                    Text(details).font(.callout).foregroundStyle(.secondary)
                 }
-                Spacer()
-                if runner.isRunning {
-                    ProgressView().controlSize(.small)
-                    Button("Stop", role: .destructive) { runner.stop() }
-                } else {
-                    // Built material is reused, never rebuilt: the tutor starts from what is already there.
-                    if paper.isLearned {
-                        Button("Learn with a tutor") { tutor() }.buttonStyle(.borderedProminent)
-                    } else if paper.kind == .paper {
-                        Button("Analyze this paper") { analyze() }.buttonStyle(.borderedProminent)
-                    }
-                    if paper.kind == .paper {
-                        Button("Suggest improvements") { improve() }
-                            .disabled(!paper.isLearned)
-                    }
-                    if paper.isLearned {
-                        if exporting {
-                            ProgressView().controlSize(.small)
-                        } else {
-                            Button { download() } label: { Label("Download breakdown", systemImage: "arrow.down.doc") }
-                                .help("Save the whole analysis as one PDF: summary, map, concepts, animations and exercises (no solutions)")
-                        }
-                    }
-                }
+                Spacer(minLength: 12)
+                actions
             }
             Picker("", selection: $tab) {
                 ForEach(tabs, id: \.self) { Text($0.rawValue).tag($0) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .fixedSize()
         }
-        .padding(14)
+        .padding(.horizontal, 22).padding(.top, 18).padding(.bottom, 14)
+    }
+
+    /// "arXiv 2511.14759 · 4 animations · 9 exercises", or what's still to do.
+    private var details: String {
+        var parts: [String] = []
+        if let origin = paper.origin { parts.append(origin) }
+        if paper.downloading { parts.append("downloading…") }
+        else if !paper.isLearned { parts.append(paper.kind == .caseStudy ? "not built yet" : "not analyzed yet") }
+        else {
+            parts.append("concept map")
+            if !paper.animations.isEmpty { parts.append("\(paper.animations.count) animation\(paper.animations.count == 1 ? "" : "s")") }
+            if !paper.exercises.isEmpty { parts.append("\(paper.exercises.count) exercise\(paper.exercises.count == 1 ? "" : "s")") }
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// One prominent next step, the PDF, and everything else under More.
+    @ViewBuilder private var actions: some View {
+        HStack(spacing: 8) {
+            if runner.isRunning {
+                ProgressView().controlSize(.small)
+                Button("Stop", role: .destructive) { runner.stop() }
+            } else {
+                // Built material is reused, never rebuilt: the tutor starts from what is already there.
+                if paper.isLearned {
+                    Button { tutor() } label: { Label("Learn with a tutor", systemImage: "graduationcap") }
+                        .buttonStyle(.borderedProminent)
+                } else if paper.kind == .paper {
+                    Button { analyze() } label: { Label("Analyze this paper", systemImage: "sparkles") }
+                        .buttonStyle(.borderedProminent)
+                }
+                if paper.isLearned {
+                    if exporting {
+                        ProgressView().controlSize(.small).padding(.horizontal, 8)
+                    } else {
+                        Button { download() } label: { Label("Download PDF", systemImage: "arrow.down.doc") }
+                            .help("Save the whole analysis as one PDF: summary, map, concepts, key animation frames and exercises (no solutions)")
+                    }
+                }
+                Menu {
+                    if paper.kind == .paper {
+                        Button("Suggest improvements") { improve() }.disabled(!paper.isLearned)
+                    }
+                    if paper.hasPDF {
+                        Button("Open the paper's PDF") { NSWorkspace.shared.open(paper.directory.appendingPathComponent("paper.pdf")) }
+                    }
+                    Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([paper.directory]) }
+                } label: {
+                    Label("More", systemImage: "ellipsis.circle")
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+            }
+        }
+        .controlSize(.large)
     }
 
     @ViewBuilder private var content: some View {
@@ -275,17 +349,17 @@ struct PaperView: View {
         case .overview:
             if paper.kind == .paper && !paper.isLearned && runner.items.isEmpty && !runner.isRunning {
                 analyzePrompt
+            } else if paper.isLearned && runner.items.isEmpty && !runner.isRunning, let summary = overviewPage() {
+                WebPane(fileURL: summary, readAccess: paper.directory).id(summary)
             } else {
                 RunPane(runner: runner, directory: paper.directory, replyText: $replyText, settings: settings)
             }
         case .map:
             WebPane(fileURL: paper.conceptGraph, readAccess: paper.directory)
         case .animations:
-            picker(items: paper.animations, selection: $animation, label: { $0.deletingPathExtension().lastPathComponent })
+            animationViewer
         case .exercises:
-            picker(items: paper.exercises.map { $0.appendingPathComponent("README.md") },
-                   selection: $exercise,
-                   label: { $0.deletingLastPathComponent().lastPathComponent })
+            exerciseViewer
         case .ideas:
             WebPane(fileURL: paper.ideas, readAccess: paper.directory)
         case .sources:
@@ -293,22 +367,102 @@ struct PaperView: View {
         }
     }
 
-    @ViewBuilder
-    private func picker(items: [URL], selection: Binding<URL?>, label: @escaping (URL) -> String) -> some View {
+    /// The landing page of an analyzed paper: its summary from the concept graph, and where to go next. Written
+    /// next to the material (like the other rendered pages) and refreshed each time it's shown.
+    private func overviewPage() -> URL? {
+        guard let graph = paper.conceptGraph, let text = try? String(contentsOf: graph, encoding: .utf8) else { return nil }
+        // The first "## " section is the paper's summary ("The paper in five lines"); the "> **Source:**" quote
+        // above it says which version the material follows.
+        let parts = text.components(separatedBy: "\n## ")
+        let intro = parts.first ?? ""
+        let source = intro.split(separator: "\n", omittingEmptySubsequences: false)
+            .drop { !$0.hasPrefix(">") }.prefix { $0.hasPrefix(">") }.joined(separator: "\n")
+        let summary = parts.count > 1 ? "## " + parts[1] : ""
+        var page = ["# \(paper.title)", "", source, "", summary, "", "## Where to go next", ""]
+        page.append("- **Concept map:** every idea and equation, as a map of cards; click one to see what it builds on.")
+        if !paper.animations.isEmpty {
+            page.append("- **Animations:** \(paper.animations.count) interactive ones; drag the sliders to see what changes.")
+        }
+        if !paper.exercises.isEmpty {
+            page.append("- **Exercises:** \(paper.exercises.count), in order, each building on the last.")
+        }
+        page.append("- **Learn with a tutor** (top right) walks you through it one exercise at a time, starting from what you already know.")
+        page.append("- **Download PDF** saves the whole breakdown, typeset, with key frames from the animations.")
+        let out = paper.directory.appendingPathComponent(".rp-overview.md")
+        guard (try? page.joined(separator: "\n").write(to: out, atomically: true, encoding: .utf8)) != nil else { return nil }
+        return out
+    }
+
+    private var nothingYet: some View {
+        ContentUnavailableView("Nothing here yet", systemImage: "tray",
+                               description: Text(paper.kind == .paper ? "Press “Analyze this paper” first." : "This case study hasn't been built yet."))
+    }
+
+    /// One animation at a time, full width, chosen by its real title.
+    @ViewBuilder private var animationViewer: some View {
+        let items = paper.animations
         if items.isEmpty {
-            ContentUnavailableView("Nothing here yet", systemImage: "tray",
-                                   description: Text("Press “Analyze this paper” first."))
+            nothingYet
         } else {
-            HSplitView {
-                List(items, id: \.self, selection: selection) { item in
-                    Text(label(item).replacingOccurrences(of: "_", with: " "))
-                        .tag(item as URL?)
+            let current = animation.flatMap { items.contains($0) ? $0 : nil } ?? items[0]
+            let index = items.firstIndex(of: current) ?? 0
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    Picker("", selection: Binding(get: { current }, set: { animation = $0 })) {
+                        ForEach(items, id: \.self) { Text(Self.title(ofAnimation: $0)).tag($0) }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                    Spacer()
+                    Button { animation = items[index - 1] } label: { Image(systemName: "chevron.left") }
+                        .disabled(index == 0)
+                    Text("\(index + 1) of \(items.count)").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                    Button { animation = items[index + 1] } label: { Image(systemName: "chevron.right") }
+                        .disabled(index + 1 == items.count)
                 }
-                .frame(minWidth: 180, idealWidth: 220, maxWidth: 320)
-                WebPane(fileURL: selection.wrappedValue ?? items.first, readAccess: paper.directory)
-                    .frame(minWidth: 400)
+                .padding(.horizontal, 22).padding(.vertical, 8)
+                Divider()
+                WebPane(fileURL: current, readAccess: paper.directory).id(current)
             }
         }
+    }
+
+    /// The exercises in order, by their real titles; the first one is open from the start.
+    @ViewBuilder private var exerciseViewer: some View {
+        let items = paper.exercises.map { $0.appendingPathComponent("README.md") }
+        if items.isEmpty {
+            nothingYet
+        } else {
+            let current = exercise.flatMap { items.contains($0) ? $0 : nil } ?? items[0]
+            HSplitView {
+                List(items, id: \.self, selection: Binding(get: { current }, set: { exercise = $0 })) { item in
+                    Text(Self.title(ofExercise: item)).lineLimit(2).padding(.vertical, 3).tag(item as URL?)
+                }
+                .frame(minWidth: 200, idealWidth: 250, maxWidth: 340)
+                WebPane(fileURL: current, readAccess: paper.directory).id(current)
+                    .frame(minWidth: 420)
+            }
+        }
+    }
+
+    /// An animation's own <title>, without the " · researcher-pal" suffix.
+    static func title(ofAnimation url: URL) -> String {
+        if let html = try? String(contentsOf: url, encoding: .utf8),
+           let range = html.range(of: #"<title>[^<]*</title>"#, options: .regularExpression) {
+            let title = html[range].replacingOccurrences(of: #"</?title>"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: " · researcher-pal", with: "").trimmingCharacters(in: .whitespaces)
+            if !title.isEmpty { return title }
+        }
+        return url.deletingPathExtension().lastPathComponent.replacingOccurrences(of: "_", with: " ").capitalized
+    }
+
+    /// An exercise README's first heading ("01 · Sparse success reward").
+    static func title(ofExercise readme: URL) -> String {
+        if let text = try? String(contentsOf: readme, encoding: .utf8),
+           let heading = text.split(separator: "\n").first(where: { $0.hasPrefix("# ") }) {
+            return heading.dropFirst(2).trimmingCharacters(in: .whitespaces)
+        }
+        return readme.deletingLastPathComponent().lastPathComponent.replacingOccurrences(of: "_", with: " ")
     }
 
     private func download() {

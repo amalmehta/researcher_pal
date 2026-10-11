@@ -56,7 +56,7 @@ struct WebPane: NSViewRepresentable {
     }
 
     private static let placeholder = """
-    <body style="margin:0;background:#0e1013;color:#9aa1a9;font:14px -apple-system;\
+    <meta name="color-scheme" content="light dark"><body style="margin:0;color:#8a9099;font:14px -apple-system;\
     display:flex;align-items:center;justify-content:center;height:100vh">Nothing to show yet.</body>
     """
 

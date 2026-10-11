@@ -20,6 +20,8 @@ struct Paper: Identifiable, Hashable {
     var kind = Kind.paper
     /// A case study's numbered sources (sources.md).
     var sources: URL?
+    /// Where it came from, for the header: "arXiv 2511.14759" or "DOI 10.…".
+    var origin: String?
 
     var id: String { kind.rawValue + "/" + slug }
     /// Its concept map, animations and exercises have been built.
@@ -96,8 +98,12 @@ final class Library: ObservableObject {
         let source = [".source", ".arxiv"].lazy
             .compactMap { try? String(contentsOf: dir.appendingPathComponent($0), encoding: .utf8) }
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.first
-        let downloaded = (try? Data(contentsOf: dir.appendingPathComponent("source.json")))
-            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }?["title"] as? String
+        let sourceJSON = (try? Data(contentsOf: dir.appendingPathComponent("source.json")))
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
+        let downloaded = sourceJSON["title"] as? String
+        let origin = (sourceJSON["arxiv"] as? String).map { "arXiv " + $0 }
+            ?? (sourceJSON["doi"] as? String).map { "DOI " + $0 }
+            ?? (source.flatMap { Self.arxivID(from: $0) }).map { "arXiv " + $0 }
 
         return Paper(
             slug: dir.lastPathComponent,
@@ -112,7 +118,8 @@ final class Library: ObservableObject {
             downloading: downloading.contains(dir.lastPathComponent),
             kind: kind,
             sources: fm.fileExists(atPath: dir.appendingPathComponent("sources.md").path)
-                ? dir.appendingPathComponent("sources.md") : nil
+                ? dir.appendingPathComponent("sources.md") : nil,
+            origin: origin
         )
     }
 

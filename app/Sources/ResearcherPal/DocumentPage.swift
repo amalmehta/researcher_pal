@@ -31,7 +31,6 @@ enum DocumentPage {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
     <style>
     """# + css + #"""
     </style></head>
@@ -56,7 +55,8 @@ enum DocumentPage {
            font: 17.5px/1.62 "KaTeX_Main", "Latin Modern Roman", "CMU Serif", Georgia, serif;
            font-kerning: normal; text-rendering: optimizeLegibility; }
     main { max-width: 760px; margin: 0 auto; padding: 32px 36px 90px; }
-    main p, main li { text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+    main p, main li { hyphens: auto; -webkit-hyphens: auto; }
+    @media (min-width: 640px) { main p, main li { text-align: justify; } }  /* narrow columns justify into gaps */
     h1 { font-size: 30px; line-height: 1.2; margin: 0 0 16px; font-weight: 700; letter-spacing: -.01em; }
     h2 { font-size: 23px; margin: 2.2em 0 .55em; padding-top: .75em; border-top: 1px solid var(--line); font-weight: 700; }
     h3 { font-size: 19px; margin: 2em 0 .45em; font-weight: 700; }
@@ -211,6 +211,19 @@ enum DocumentPage {
     // ---------------------------------------------------------------- the readable map
     const KINDS = { prereq: "Prerequisite", core: "Established idea", novel: "New in this paper", known: "You know this" };
     let mermaidReady = false;
+    // Mermaid is ~3 MB, so it's fetched only when a diagram is actually shown: loading it up front held every page
+    // blank for seconds.
+    let mermaidLoading = null;
+    function loadMermaid() {
+      if (window.mermaid) return Promise.resolve();
+      return mermaidLoading = mermaidLoading || new Promise((resolve, reject) => {
+        const tag = document.createElement("script");
+        tag.src = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
+        tag.onload = resolve;
+        tag.onerror = () => reject(new Error("couldn't load the diagram library (offline?)"));
+        document.head.appendChild(tag);
+      });
+    }
     // SVG text labels: Mermaid's HTML labels are measured from the page and can come out as zero, which collapses
     // the whole layout into a 16x16 box.
     function initMermaid() {
@@ -310,17 +323,20 @@ enum DocumentPage {
           wrap.querySelector(".cmap-cards").hidden = diagram;
           info.hidden = diagram;
           wrap.querySelector(".cmap-diagram").hidden = !diagram;
-          if (diagram && window.mermaid && !wrap.dataset.drawn) {
+          if (diagram && !wrap.dataset.drawn) {
             wrap.dataset.drawn = "1";
-            initMermaid();
             const host = wrap.querySelector(".cmap-diagram .mermaid");
-            mermaid.render("cmap-" + Math.random().toString(36).slice(2), source).then(({ svg }) => {
-              host.innerHTML = svg;
-              const s = host.querySelector("svg");
-              const fit = wrap.querySelector(".cmap-diagram").clientWidth - 40;
-              const natural = s.viewBox.baseVal.width;
-              s.style.width = Math.min(natural, Math.max(fit, 200)) + "px";  // start fitted, never blown up
-            }).catch(err => { host.textContent = "The diagram couldn't be drawn: " + err.message; });
+            host.textContent = "Drawing the diagram…";
+            loadMermaid()
+              .then(() => { initMermaid(); return mermaid.render("cmap-" + Math.random().toString(36).slice(2), source); })
+              .then(({ svg }) => {
+                host.innerHTML = svg;
+                const s = host.querySelector("svg");
+                const fit = wrap.querySelector(".cmap-diagram").clientWidth - 40;
+                const natural = s.viewBox.baseVal.width;
+                s.style.width = Math.min(natural, Math.max(fit, 200)) + "px";  // start fitted, never blown up
+              })
+              .catch(err => { host.textContent = "The diagram couldn't be drawn: " + err.message; });
           }
           return;
         }
@@ -353,9 +369,9 @@ enum DocumentPage {
       if (/^\s*(flowchart|graph)\b/.test(src)) conceptMap(code.parentElement, src);
       else { const div = document.createElement("div"); div.className = "mermaid"; div.textContent = src; code.parentElement.replaceWith(div); }
     });
-    if (window.mermaid && document.querySelector("main > .doc .mermaid:not(.cmap .mermaid)")) {
-      initMermaid();
-      mermaid.run({ querySelector: "main > .doc .mermaid:not(.cmap .mermaid)" });
+    if (document.querySelector("main > .doc .mermaid:not(.cmap .mermaid)")) {
+      loadMermaid().then(() => { initMermaid(); mermaid.run({ querySelector: "main > .doc .mermaid:not(.cmap .mermaid)" }); })
+        .catch(() => {});
     }
     // Animation snapshots go where a document left <!--FRAMES:name.html-->.
     const walker = document.createTreeWalker(out, NodeFilter.SHOW_COMMENT);
