@@ -339,25 +339,7 @@ struct RunPane: View {
     var body: some View {
         VStack(spacing: 0) {
             if runner.needsLogin { loginBanner }
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
-                        if runner.items.isEmpty {
-                            Text(emptyHint)
-                                .foregroundStyle(.secondary)
-                                .padding(.top, 8)
-                        }
-                        ForEach(runner.items) { item in
-                            row(item).id(item.id)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                }
-                .onChange(of: runner.items.count) {
-                    if let last = runner.items.last { proxy.scrollTo(last.id, anchor: .bottom) }
-                }
-            }
+            TranscriptView(items: runner.items, emptyHint: emptyHint)
             ForEach(runner.permissionRequests) { request in
                 PermissionCard(request: request) { runner.answer(request, $0) }
             }
@@ -392,29 +374,6 @@ struct RunPane: View {
         }
         .padding(10)
         .background(Color.orange.opacity(0.14))
-    }
-
-    @ViewBuilder private func row(_ item: ClaudeRunner.Item) -> some View {
-        switch item.kind {
-        case .user:
-            label(item.shown, icon: "person.fill", color: .accentColor)
-        case .assistant:
-            Text(item.shown).textSelection(.enabled)
-        case .tool:
-            label(item.shown, icon: "wrench.and.screwdriver", color: .secondary)
-        case .result:
-            label(item.shown, icon: "checkmark.circle", color: .green)
-        case .error:
-            label(item.shown, icon: "xmark.octagon", color: .red)
-        }
-    }
-
-    private func label(_ text: String, icon: String, color: Color) -> some View {
-        HStack(alignment: .top, spacing: 6) {
-            Image(systemName: icon).foregroundStyle(color).font(.caption)
-            Text(text).font(.callout).foregroundStyle(color == .secondary ? .secondary : .primary)
-                .textSelection(.enabled)
-        }
     }
 
     private func send() {
